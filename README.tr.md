@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <b>Türkçe</b>
+  <a href="README.md">English</a> · <b>Türkçe</b> · <a href="https://abdullahnil.github.io/drivux/">Web sitesi</a>
 </p>
 
 ---
