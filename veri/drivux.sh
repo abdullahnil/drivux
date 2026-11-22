@@ -1,3 +1,3 @@
 #!/bin/sh
 # Drivux başlatıcısı
-PYTHONPATH="@PYDIR@${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m drivux "$@"
+PYTHONPATH="@PYDIR@${PYTHONPATH:+:$PYTHONPATH}" exec python3 -P -m drivux "$@"

@@ -38,7 +38,7 @@ UYARI_SIMGESI = "dialog-warning-symbolic"
 
 def _drivux(*args):
     """Starts drivux (the same launcher this process came from) without waiting."""
-    komut = [sys.executable, "-m", "drivux", *args]
+    komut = [sys.executable, "-P", "-m", "drivux", *args]
     subprocess.Popen(komut, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -89,7 +89,7 @@ class Tepsi:
     def yenile(self):
         # After an update the files on disk are newer than this process: start again with them
         if guncelle.kurulu_surum() != ortak.SURUM:
-            os.execv(sys.executable, [sys.executable, "-m", "drivux", "tray"])
+            os.execv(sys.executable, [sys.executable, "-P", "-m", "drivux", "tray"])
         yeni = guncelle.bekleyen_surum()
         self.guncelleme.set_visible(bool(yeni))
         if yeni:

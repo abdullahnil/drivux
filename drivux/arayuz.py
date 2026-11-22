@@ -511,7 +511,7 @@ class Pencere(Adw.ApplicationWindow):
 def tepsiyi_baslat():
     """Starts the tray icon process; it exits by itself if one is already running."""
     if ortak.ayar_oku().get("tepsi", True):
-        subprocess.Popen([sys.executable, "-m", "drivux", "tray"], start_new_session=True,
+        subprocess.Popen([sys.executable, "-P", "-m", "drivux", "tray"], start_new_session=True,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -544,7 +544,7 @@ class Uygulama(Adw.Application):
 
     def yeniden_baslat(self):
         """Quits and starts again once this instance has let go of its D-Bus name."""
-        subprocess.Popen(["sh", "-c", 'sleep 1; exec "$0" -m drivux', sys.executable], start_new_session=True,
+        subprocess.Popen(["sh", "-c", 'sleep 1; exec "$0" -P -m drivux', sys.executable], start_new_session=True,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.quit()
 

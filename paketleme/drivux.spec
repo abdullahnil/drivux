@@ -38,6 +38,9 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Mon Nov 23 2026 abdullahnil - 1.5.2-1
+- Always run the installed code: a "drivux" folder in the current directory no longer shadows it
+
 * Mon Nov 23 2026 abdullahnil - 1.5.1-1
 - "Update available" in the top bar menu opens the update dialog directly
 - New command: drivux update

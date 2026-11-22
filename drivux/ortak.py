@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-SURUM = "1.5.1"
+SURUM = "1.5.2"
 EN_DUSUK_RCLONE = (1, 66, 0)   # bisync --resilient/--recover/--conflict-resolve için
 UYGULAMA_KIMLIGI = "io.github.abdullahnil.Drivux"
 SERVIS = "drivux.service"
