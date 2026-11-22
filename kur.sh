@@ -1,5 +1,5 @@
 #!/bin/bash
-# Drive Bağlantı — kaynaktan kurulum (yalnızca bu kullanıcı için, ~/.local altına)
+# G-Drivux — kaynaktan kurulum (yalnızca bu kullanıcı için, ~/.local altına)
 #
 #   ./kur.sh
 #
@@ -10,12 +10,12 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
 
-PYDIR="$HOME/.local/share/drive-baglanti"
+PYDIR="$HOME/.local/share/gdrivux"
 BIN="$HOME/.local/bin"
 UYG="$HOME/.local/share/applications"
 SIMGE="$HOME/.local/share/icons/hicolor/scalable/apps"
 SYSTEMD="$HOME/.config/systemd/user"
-KIMLIK="io.github.abdullahnil.DriveBaglanti"
+KIMLIK="io.github.abdullahnil.GDrivux"
 
 if [ -t 1 ]; then Y=$'\e[1;32m'; S=$'\e[1;33m'; K=$'\e[1;31m'; M=$'\e[1;34m'; N=$'\e[0m'; else Y=; S=; K=; M=; N=; fi
 adim()  { echo; echo "${M}==>${N} $*"; }
@@ -23,7 +23,7 @@ bilgi() { echo "    $*"; }
 hata()  { echo "${K}HATA:${N} $*" >&2; exit 1; }
 
 [ "$EUID" -eq 0 ] && hata "sudo ile değil, normal kullanıcı olarak çalıştır. Gerekirse şifre sorulur."
-echo "${Y}Drive Bağlantı — kurulum${N}"
+echo "${Y}G-Drivux — kurulum${N}"
 
 # ---------- 1. sistem paketleri ----------
 adim "1/3 Gerekli sistem paketleri"
@@ -54,12 +54,12 @@ fi
 # ---------- 2. uygulama ----------
 adim "2/3 Uygulama kuruluyor (~/.local)"
 mkdir -p "$PYDIR" "$BIN" "$UYG" "$SIMGE" "$SYSTEMD"
-rm -rf "$PYDIR/drive_baglanti"
-cp -r drive_baglanti "$PYDIR/"
+rm -rf "$PYDIR/gdrivux"
+cp -r gdrivux "$PYDIR/"
 find "$PYDIR" -name __pycache__ -prune -exec rm -rf {} +
-sed "s|@PYDIR@|$PYDIR|" veri/drive-baglanti.sh > "$BIN/drive-baglanti"
-chmod 755 "$BIN/drive-baglanti"
-sed "s|^Exec=drive-baglanti|Exec=$BIN/drive-baglanti|" veri/drive-baglanti.desktop > "$UYG/$KIMLIK.desktop"
+sed "s|@PYDIR@|$PYDIR|" veri/gdrivux.sh > "$BIN/gdrivux"
+chmod 755 "$BIN/gdrivux"
+sed "s|^Exec=gdrivux|Exec=$BIN/gdrivux|" veri/gdrivux.desktop > "$UYG/$KIMLIK.desktop"
 install -m 644 "veri/$KIMLIK.svg" "$SIMGE/"
 for s in systemd/*.service; do
     sed "s|@BINDIR@|$BIN|g" "$s" > "$SYSTEMD/$(basename "$s")"
@@ -67,7 +67,16 @@ done
 systemctl --user daemon-reload
 update-desktop-database "$UYG" 2>/dev/null || true
 gtk-update-icon-cache -q "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
-bilgi "Uygulama menüsünde: Drive Bağlantı"
+bilgi "Uygulama menüsünde: G-Drivux"
+
+# 1.1 ve öncesi "Drive Bağlantı" kurulumundan geçiş
+if PYTHONPATH="$PYDIR" python3 -c 'import sys; from gdrivux import ortak; sys.exit(0 if ortak.eski_surumden_tasi() else 1)'; then
+    bilgi "Eski \"Drive Bağlantı\" kurulumu bulundu; ayarlar G-Drivux'a taşındı."
+fi
+[ -d "$HOME/.local/share/drive-baglanti/bin" ] && [ ! -x "$PYDIR/bin/rclone" ] || rm -rf "$HOME/.local/share/drive-baglanti"
+rm -f "$HOME/.local/bin/drive-baglanti" \
+      "$HOME/.local/share/applications/io.github.abdullahnil.DriveBaglanti.desktop" \
+      "$HOME/.local/share/icons/hicolor/scalable/apps/io.github.abdullahnil.DriveBaglanti.svg"
 
 # 1.0 öncesi elle kurulmuş gdrive-senkr eşitlemesini uygulamaya taşı
 if [ -f "$SYSTEMD/gdrive-senkr.service" ]; then
@@ -75,7 +84,7 @@ if [ -f "$SYSTEMD/gdrive-senkr.service" ]; then
     eski_uzak="$(grep -oP 'bisync \S+ \S+?:\K\S+' "$SYSTEMD/gdrive-senkr.service")"
     PYTHONPATH="$PYDIR" python3 - "$eski_yerel" "$eski_uzak" <<'PY'
 import sys
-from drive_baglanti import ortak
+from gdrivux import ortak
 yerel, uzak = ortak.kisalt(sys.argv[1]), sys.argv[2]
 a = ortak.ayar_oku()
 if yerel and uzak and not any(k["yerel"] == yerel for k in a["klasorler"]):
@@ -89,14 +98,14 @@ fi
 
 # ---------- 3. sihirbaz / güncelleme ----------
 adim "3/3 Son adım"
-tamam="$(PYTHONPATH="$PYDIR" python3 -c 'from drive_baglanti import ortak; print(int(ortak.ayar_oku()["kurulum_tamam"] and bool(ortak.rclone_yolu())))')"
+tamam="$(PYTHONPATH="$PYDIR" python3 -c 'from gdrivux import ortak; print(int(ortak.ayar_oku()["kurulum_tamam"] and bool(ortak.rclone_yolu())))')"
 if [ "$tamam" = 1 ]; then
-    PYTHONPATH="$PYDIR" python3 -c 'from drive_baglanti import ortak, bilesenler; print("\n".join(bilesenler.servisleri_uygula(ortak.ayar_oku())) or "    Servisler güncellendi ve yeniden başlatıldı.")'
+    PYTHONPATH="$PYDIR" python3 -c 'from gdrivux import ortak, bilesenler; print("\n".join(bilesenler.servisleri_uygula(ortak.ayar_oku())) or "    Servisler güncellendi ve yeniden başlatıldı.")'
     echo; echo "${Y}Güncelleme tamamlandı.${N}"
 elif [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]; then
     bilgi "Kurulum sihirbazı açılıyor; rclone, Google hesabı ve diğer ayarlar orada."
-    (setsid "$BIN/drive-baglanti" >/dev/null 2>&1 &)
+    (setsid "$BIN/gdrivux" >/dev/null 2>&1 &)
     echo; echo "${Y}Kurulum tamamlandı.${N} Sihirbazdaki adımları izle."
 else
-    echo; echo "${Y}Kurulum tamamlandı.${N} Masaüstünde \"Drive Bağlantı\"yı açıp sihirbazı tamamla."
+    echo; echo "${Y}Kurulum tamamlandı.${N} Masaüstünde \"G-Drivux\"yı açıp sihirbazı tamamla."
 fi

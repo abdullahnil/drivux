@@ -1,10 +1,10 @@
 [Unit]
-Description=Drive Bağlantı — klasör eşitleme servisi
+Description=G-Drivux — klasör eşitleme servisi
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=@BINDIR@/drive-baglanti servis
+ExecStart=@BINDIR@/gdrivux servis
 Restart=on-failure
 RestartSec=30
 

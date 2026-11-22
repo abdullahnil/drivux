@@ -21,7 +21,7 @@ MIMARI = {"x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm
 
 
 def _indir(url: str, ilerleme=None) -> bytes:
-    istek = Request(url, headers={"User-Agent": f"drive-baglanti/{ortak.SURUM}"})
+    istek = Request(url, headers={"User-Agent": f"gdrivux/{ortak.SURUM}"})
     with urlopen(istek, timeout=60) as yanit:
         toplam = int(yanit.headers.get("Content-Length") or 0)
         tampon = io.BytesIO()

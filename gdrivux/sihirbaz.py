@@ -20,7 +20,7 @@ CLIENT_ID_REHBERI = "https://rclone.org/drive/#making-your-own-client-id"
 
 class Sihirbaz(Adw.ApplicationWindow):
     def __init__(self, uyg, bitince):
-        super().__init__(application=uyg, title="Drive Bağlantı — Kurulum",
+        super().__init__(application=uyg, title="G-Drivux — Kurulum",
                          default_width=620, default_height=680)
         self.bitince = bitince
         self.ayar = ortak.ayar_oku()
@@ -125,7 +125,7 @@ class Sihirbaz(Adw.ApplicationWindow):
     def sayfa_hosgeldin(self):
         return Adw.StatusPage(
             icon_name=ortak.UYGULAMA_KIMLIGI,
-            title="Drive Bağlantı'ya hoş geldin",
+            title="G-Drivux'a hoş geldin",
             description="Birkaç adımda Google Drive'ı bu bilgisayara bağlayacağız:\n\n"
                         "• Drive'ın tamamı Dosyalar'da bir disk gibi görünecek\n"
                         "• Seçtiğin klasörler bilgisayarla Drive arasında iki yönlü eşitlenecek\n\n"
@@ -135,7 +135,7 @@ class Sihirbaz(Adw.ApplicationWindow):
         sayfa = Adw.PreferencesPage()
         grup = Adw.PreferencesGroup(
             title="rclone",
-            description="Drive Bağlantı, Google Drive ile konuşmak için rclone adlı açık kaynak aracı "
+            description="G-Drivux, Google Drive ile konuşmak için rclone adlı açık kaynak aracı "
                         f"kullanır. En az {ortak.surum_metni(ortak.EN_DUSUK_RCLONE)} gerekir.")
         self.rclone_satiri = Adw.ActionRow(title="Kontrol ediliyor…")
         self.rclone_simgesi = Gtk.Image(icon_size=Gtk.IconSize.LARGE)
@@ -415,7 +415,7 @@ class Sihirbaz(Adw.ApplicationWindow):
                 self.hesap_satiri.set_subtitle("Aşağıdaki düğmeyle Google hesabına bağlan")
                 self.giris_dugmesi.set_visible(self.giris_sureci is None)
             self.dugmeleri_guncelle()
-        arka_planda(ortak.drive_baglantilari, bitti)
+        arka_planda(ortak.gdrivuxlari, bitti)
 
     def google_giris(self):
         ad = self._ad()

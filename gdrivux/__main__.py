@@ -1,10 +1,10 @@
 """Kullanım:
-  drive-baglanti            Arayüzü açar
-  drive-baglanti servis     Eşitleme servisini çalıştırır (systemd kullanır)
-  drive-baglanti disk       Google Drive'ı disk olarak bağlar (systemd kullanır)
-  drive-baglanti ayir       Diski ayırır
-  drive-baglanti esitle     Servisten hemen eşitlemesini ister
-  drive-baglanti durum      Eşitleme durumunu yazdırır
+  gdrivux            Arayüzü açar
+  gdrivux servis     Eşitleme servisini çalıştırır (systemd kullanır)
+  gdrivux disk       Google Drive'ı disk olarak bağlar (systemd kullanır)
+  gdrivux ayir       Diski ayırır
+  gdrivux esitle     Servisten hemen eşitlemesini ister
+  gdrivux durum      Eşitleme durumunu yazdırır
 """
 
 import sys

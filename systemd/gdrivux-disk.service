@@ -1,12 +1,12 @@
 [Unit]
-Description=Drive Bağlantı — Google Drive diski (rclone mount)
+Description=G-Drivux — Google Drive diski (rclone mount)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStart=@BINDIR@/drive-baglanti disk
-ExecStopPost=@BINDIR@/drive-baglanti ayir
+ExecStart=@BINDIR@/gdrivux disk
+ExecStopPost=@BINDIR@/gdrivux ayir
 Restart=on-failure
 RestartSec=15
 

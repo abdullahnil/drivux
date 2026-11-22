@@ -30,7 +30,7 @@ def log(mesaj: str) -> None:
 
 def bildir(baslik: str, govde: str) -> None:
     subprocess.run(
-        ["notify-send", "-a", "Drive Bağlantı", "-i", ortak.UYGULAMA_KIMLIGI, baslik, govde],
+        ["notify-send", "-a", "G-Drivux", "-i", ortak.UYGULAMA_KIMLIGI, baslik, govde],
         capture_output=True,
     )
 
@@ -229,11 +229,10 @@ def disk_bagla() -> None:
     ayar = ortak.ayar_oku()
     rclone = ortak.rclone_yolu()
     if not rclone:
-        bildir("Drive diski bağlanamadı", "Uygun rclone bulunamadı. Drive Bağlantı'yı açıp kurulumu tamamla.")
+        bildir("Drive diski bağlanamadı", "Uygun rclone bulunamadı. G-Drivux'u açıp kurulumu tamamla.")
         raise SystemExit("rclone bulunamadı")
     nokta = ortak.yol(ayar["baglama_noktasi"])
-    if os.path.ismount(nokta):
-        subprocess.run(["fusermount3", "-uz", str(nokta)])
+    _eski_baglantiyi_temizle(nokta)
     nokta.mkdir(parents=True, exist_ok=True)
     # Google Docs dosyalarının gerçek boyutu bilinmediği için Office biçiminde 0 bayt görünür
     # ve açılamaz; bunun yerine tarayıcıda açılan küçük bağlantı dosyaları gösterilir.
@@ -252,14 +251,25 @@ def disk_bagla() -> None:
     ])
 
 
+def _eski_baglantiyi_temizle(nokta) -> None:
+    """Bağlıysa ya da önceki rclone düzgün kapanmadığı için yarım kalmışsa ayırır."""
+    try:
+        os.stat(nokta)
+        yarim = False
+    except FileNotFoundError:
+        return
+    except OSError:          # ENOTCONN: "Transport endpoint is not connected"
+        yarim = True
+    if yarim or os.path.ismount(nokta):
+        subprocess.run(["fusermount3", "-uz", str(nokta)], capture_output=True)
+
+
 def disk_ayir() -> None:
-    nokta = ortak.yol(ortak.ayar_oku()["baglama_noktasi"])
-    if os.path.ismount(nokta):
-        subprocess.run(["fusermount3", "-uz", str(nokta)])
+    _eski_baglantiyi_temizle(ortak.yol(ortak.ayar_oku()["baglama_noktasi"]))
 
 
 def main():
     if not ortak.rclone_yolu():
-        bildir("Drive eşitlemesi başlatılamadı", "Uygun rclone bulunamadı. Drive Bağlantı'yı açıp kurulumu tamamla.")
+        bildir("Drive eşitlemesi başlatılamadı", "Uygun rclone bulunamadı. G-Drivux'u açıp kurulumu tamamla.")
         raise SystemExit("rclone bulunamadı")
     Servis().calistir()

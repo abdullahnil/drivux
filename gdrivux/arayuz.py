@@ -37,7 +37,7 @@ def boyut(b: float) -> str:
 
 class Pencere(Adw.ApplicationWindow):
     def __init__(self, uyg):
-        super().__init__(application=uyg, title="Drive Bağlantı", default_width=640, default_height=720)
+        super().__init__(application=uyg, title="G-Drivux", default_width=640, default_height=720)
         self.klasor_satirlari: list[Gtk.Widget] = []
         self.disk_islemde = False
 
@@ -381,10 +381,10 @@ class Pencere(Adw.ApplicationWindow):
 
     def hakkinda(self):
         Adw.AboutDialog(
-            application_name="Drive Bağlantı", application_icon=ortak.UYGULAMA_KIMLIGI,
+            application_name="G-Drivux", application_icon=ortak.UYGULAMA_KIMLIGI,
             version=ortak.SURUM, developer_name="abdullahnil",
             comments="Google Drive'ı disk olarak bağlar ve klasörleri iki yönlü eşitler (rclone).",
-            website="https://github.com/abdullahnil/drive-baglanti",
+            website="https://github.com/abdullahnil/gdrivux",
             license_type=Gtk.License.MIT_X11,
         ).present(self)
 
@@ -394,6 +394,9 @@ class Uygulama(Adw.Application):
         super().__init__(application_id=ortak.UYGULAMA_KIMLIGI, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
 
     def do_activate(self):
+        if ortak.eski_surumden_tasi() and ortak.ayar_oku()["kurulum_tamam"]:
+            from .bilesenler import servisleri_uygula
+            servisleri_uygula(ortak.ayar_oku())
         if self.props.active_window:
             self.props.active_window.present()
         elif not ortak.ayar_oku()["kurulum_tamam"] or not ortak.rclone_yolu():
