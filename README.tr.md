@@ -50,10 +50,10 @@ Dağıtımına uygun paketi [Sürümler](https://github.com/abdullahnil/drivux/r
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.5.0-1.noarch.rpm
+sudo dnf install ./drivux-1.5.1-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.5.0_all.deb
+sudo apt install ./drivux_1.5.1_all.deb
 ```
 
 Ardından uygulama menüsünden **Drivux**'u aç; kurulum sihirbazı başlar.
@@ -92,6 +92,7 @@ drivux            # uygulamayı aç
 drivux sync       # hemen eşitle
 drivux status     # eşitleme durumunu JSON olarak yazdır
 drivux tray       # üst çubuk simgesini göster
+drivux update     # güncellemeleri denetle ve varsa kurmayı öner
 ```
 
 ## Nasıl çalışır?

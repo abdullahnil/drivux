@@ -50,10 +50,10 @@ Download the package for your distribution from the [Releases](https://github.co
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.5.0-1.noarch.rpm
+sudo dnf install ./drivux-1.5.1-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.5.0_all.deb
+sudo apt install ./drivux_1.5.1_all.deb
 ```
 
 Then open **Drivux** from your app menu and the setup wizard starts.
@@ -92,6 +92,7 @@ drivux            # open the app
 drivux sync       # sync now
 drivux status     # print sync status as JSON
 drivux tray       # show the top bar icon
+drivux update     # check for updates and offer to install one
 ```
 
 ## How it works

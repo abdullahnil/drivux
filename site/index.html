@@ -395,7 +395,7 @@ footer .links a{color:var(--muted)}
       <div class="feat reveal"><div class="ic c-g"><svg><use href="#i-copy"/></svg></div><h3 data-i18n="f6.t">Çakışmada veri kaybı yok</h3><p data-i18n="f6.p">Aynı dosya iki tarafta değişirse yeni sürüm kalır, öbürü numaralı bir kopya olarak saklanır.</p></div>
       <div class="feat reveal"><div class="ic c-y"><svg><use href="#i-bell"/></svg></div><h3 data-i18n="f7.t">Üst çubuk simgesi</h3><p data-i18n="f7.p">Durumu tek bakışta gör, üst çubuktan hemen eşitle. Sorun olursa simge uyarıya döner ve masaüstü bildirimi alırsın.</p></div>
       <div class="feat reveal"><div class="ic c-r"><svg><use href="#i-bolt"/></svg></div><h3 data-i18n="f8.t">Hızlı gezinme</h3><p data-i18n="f8.p">Disk bağlanır bağlanmaz ilk klasör seviyeleri arka planda okunur; Dosyalar'da klasörler beklemeden açılır.</p></div>
-      <div class="feat reveal"><div class="ic c-b"><svg><use href="#i-globe"/></svg></div><h3 data-i18n="f9.t">Türkçe ve İngilizce</h3><p data-i18n="f9.p">Arayüz sistem dilini izler; istersen ayarlardan dili kendin seçebilirsin.</p></div>
+      <div class="feat reveal"><div class="ic c-b"><svg><use href="#i-dl"/></svg></div><h3 data-i18n="f9.t">Uygulama içinden güncelleme</h3><p data-i18n="f9.p">Yeni sürüm çıkınca haber verir ve tek tıkla kurar; .rpm, .deb ya da kaynaktan, nasıl kurduysan öyle. Arayüz Türkçe ve İngilizce.</p></div>
     </div>
   </div>
 </section>
@@ -474,7 +474,8 @@ footer .links a{color:var(--muted)}
       <pre><span class="p">$ </span>drivux            <span class="c" data-i18n="cli.1"># uygulamayı aç</span>
 <span class="p">$ </span>drivux sync       <span class="c" data-i18n="cli.2"># hemen eşitle</span>
 <span class="p">$ </span>drivux status     <span class="c" data-i18n="cli.3"># durumu JSON olarak yazdır</span>
-<span class="p">$ </span>drivux tray       <span class="c" data-i18n="cli.4"># üst çubuk simgesini göster</span></pre>
+<span class="p">$ </span>drivux tray       <span class="c" data-i18n="cli.4"># üst çubuk simgesini göster</span>
+<span class="p">$ </span>drivux update     <span class="c" data-i18n="cli.5"># güncellemeleri denetle</span></pre>
     </div>
   </div>
 </section>
@@ -550,7 +551,7 @@ const EN = {
   "f6.t":"No data loss on conflicts","f6.p":"If a file changes on both sides, the newer version wins and the other is kept as a numbered copy.",
   "f7.t":"Top bar icon","f7.p":"See the status at a glance and sync now from the top bar. If something goes wrong, the icon turns into a warning and you get a desktop notification.",
   "f8.t":"Fast browsing","f8.p":"As soon as the disk is mounted, the first folder levels are read in the background, so folders open in Files without waiting.",
-  "f9.t":"English and Turkish","f9.p":"The interface follows your system language, or pick one yourself in Settings.",
+  "f9.t":"Built-in updates","f9.p":"Tells you when a new version is out and installs it in one click, the same way you installed it: .rpm, .deb or from source. The interface is in English and Turkish.",
   "i.eyebrow":"Install","i.title":"Ready in a minute.","i.sub":"Install the package for your distro and open Drivux from the app menu. The setup wizard takes it from there.",
   "r1":"GTK 4 and libadwaita 1.5+","r1s":"Fedora 40+, Ubuntu 24.04+, Debian 13+","r2s":"For the disk feature","r3":"systemd user session","r3s":"For the background services","r4":"AppIndicator (optional)","r4s":"For the top bar icon; on GNOME, the AppIndicator extension",
   "i.tabSrc":"From source","copy":"Copy","copied":"Copied!",
@@ -563,7 +564,7 @@ const EN = {
   "h3":"The GTK 4 / libadwaita app and setup wizard. Talks to the service through settings/state files and Unix signals.",
   "p1":"Settings","p2":"State","p3":"rclone (if Drivux installed it)","p4":"Logs",
   "cli.eyebrow":"Terminal","cli.title":"For terminal lovers.","cli.sub":"Trigger a sync by hand, or grab the status as JSON for your own scripts.",
-  "cli.1":"# open the app","cli.2":"# sync now","cli.3":"# print sync status as JSON","cli.4":"# show the top bar icon",
+  "cli.1":"# open the app","cli.2":"# sync now","cli.3":"# print sync status as JSON","cli.4":"# show the top bar icon","cli.5":"# check for updates",
   "q.eyebrow":"FAQ","q.title":"Good to know.",
   "q1":"Is sync a backup?","a1":"No, it's a mirror. If you delete or damage a file, that change goes to Drive too. Files deleted from Drive stay in Drive's trash for 30 days.",
   "q2":"Are Google Docs files synced?","a2":"They only show up on the disk and are not part of folder sync, because they aren't real files but documents on Google's servers. Double-click a shortcut to open it in your browser.",
