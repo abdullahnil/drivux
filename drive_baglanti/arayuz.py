@@ -2,7 +2,6 @@
 
 import json
 import subprocess
-import threading
 import time
 from pathlib import Path
 
@@ -13,8 +12,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from . import ortak  # noqa: E402
-
-SURUM = "1.0.0"
+from .bilesenler import GDOCS_SECENEKLERI, arka_planda, klasor_ekle, servisleri_uygula  # noqa: E402
 
 
 def gecen_sure(ts: float | None) -> str:
@@ -37,14 +35,6 @@ def boyut(b: float) -> str:
         b /= 1024
 
 
-def arka_planda(is_, bitince):
-    """is_() fonksiyonunu ayrı iş parçacığında çalıştırıp sonucu ana döngüde bitince()'ye verir."""
-    def calis():
-        sonuc = is_()
-        GLib.idle_add(bitince, sonuc)
-    threading.Thread(target=calis, daemon=True).start()
-
-
 class Pencere(Adw.ApplicationWindow):
     def __init__(self, uyg):
         super().__init__(application=uyg, title="Drive Bağlantı", default_width=640, default_height=720)
@@ -62,9 +52,11 @@ class Pencere(Adw.ApplicationWindow):
 
         menu = Gio.Menu()
         menu.append("Kayıtları göster", "win.kayitlar")
+        menu.append("Kurulum sihirbazı", "win.sihirbaz")
         menu.append("Hakkında", "win.hakkinda")
         baslik.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu))
-        for ad, fn in (("kayitlar", self.kayitlari_goster), ("hakkinda", self.hakkinda)):
+        for ad, fn in (("kayitlar", self.kayitlari_goster), ("hakkinda", self.hakkinda),
+                       ("sihirbaz", lambda: uyg.sihirbazi_ac())):
             eylem = Gio.SimpleAction.new(ad, None)
             eylem.connect("activate", lambda *_a, f=fn: f())
             self.add_action(eylem)
@@ -127,6 +119,13 @@ class Pencere(Adw.ApplicationWindow):
         self.onbellek.set_value(ayar["onbellek_gb"])
         self.onbellek.connect("notify::value", self.onbellek_degisti)
         ayar_grubu.add(self.onbellek)
+        self.gdocs = Adw.ComboRow(title="Google Docs dosyaları (diskte)",
+                                  subtitle="Docs, E-Tablolar ve Slaytlar tarayıcıda Google'ın düzenleyicisinde açılır",
+                                  model=Gtk.StringList.new([e for _, e in GDOCS_SECENEKLERI]))
+        self.gdocs.set_selected(next((i for i, (k, _) in enumerate(GDOCS_SECENEKLERI) if k == ayar["gdocs"]), 0))
+        self.gdocs.connect("notify::selected", lambda *_: self._ayari_kaydet(
+            "gdocs", GDOCS_SECENEKLERI[self.gdocs.get_selected()][0], sinyal_servise=False, disk_yeniden=True))
+        ayar_grubu.add(self.gdocs)
         self.otomatik = Adw.SwitchRow(title="Oturum açılınca başlat",
                                       subtitle="Eşitleme ve disk bilgisayar açılınca kendiliğinden çalışır")
         self.otomatik.set_active(ortak.systemctl("is-enabled", "--quiet", ortak.SERVIS).returncode == 0)
@@ -240,7 +239,7 @@ class Pencere(Adw.ApplicationWindow):
         uzak = ortak.ayar_oku()["uzak"]
 
         def is_():
-            r = subprocess.run(["rclone", "about", f"{uzak}:", "--json"], capture_output=True, text=True)
+            r = subprocess.run(ortak.rclone("about", f"{uzak}:", "--json"), capture_output=True, text=True)
             try:
                 return json.loads(r.stdout)
             except json.JSONDecodeError:
@@ -286,46 +285,16 @@ class Pencere(Adw.ApplicationWindow):
         return True  # durumu yenile() belirler
 
     def klasor_sec(self):
-        dialog = Gtk.FileDialog(title="Eşitlenecek klasörü seç")
-        dialog.select_folder(self, None, self.klasor_secildi)
-
-    def klasor_secildi(self, dialog, sonuc):
-        try:
-            dosya = dialog.select_folder_finish(sonuc)
-        except GLib.Error:
-            return
-        yerel = Path(dosya.get_path())
         ayar = ortak.ayar_oku()
-        if any(ortak.yol(k["yerel"]) == yerel for k in ayar["klasorler"]):
-            self.bildir("Bu klasör zaten eşitleniyor")
-            return
-        if yerel == Path.home() or yerel in (Path("/"), ortak.yol(ayar["baglama_noktasi"])):
-            self.bildir("Bu klasör eşitlenemez")
-            return
 
-        giris = Gtk.Entry(text=yerel.name, activates_default=True)
-        dlg = Adw.AlertDialog(
-            heading="Drive'daki klasör adı",
-            body=f"{ortak.kisalt(yerel)} klasörü Google Drive'da hangi klasörle eşitlensin?\n"
-                 "Drive'da yoksa oluşturulur; varsa içerikleri birleştirilir (hiçbir şey silinmez).")
-        dlg.set_extra_child(giris)
-        dlg.add_response("iptal", "İptal")
-        dlg.add_response("ekle", "Ekle")
-        dlg.set_response_appearance("ekle", Adw.ResponseAppearance.SUGGESTED)
-        dlg.set_default_response("ekle")
-
-        def yanit(_d, r):
-            ad = giris.get_text().strip().strip("/")
-            if r != "ekle" or not ad:
-                return
+        def eklendi(k):
             ayar = ortak.ayar_oku()
-            ayar["klasorler"].append({"yerel": ortak.kisalt(yerel), "uzak": ad, "hazir": False})
+            ayar["klasorler"].append(k)
             ortak.ayar_yaz(ayar)
             ortak.servise_sinyal("HUP")
-            self.bildir(f"{yerel.name} eklendi, ilk eşitleme başlıyor")
+            self.bildir(f"{ortak.yol(k['yerel']).name} eklendi, ilk eşitleme başlıyor")
             self.yenile()
-        dlg.connect("response", yanit)
-        dlg.present(self)
+        klasor_ekle(self, ayar["klasorler"], ayar["baglama_noktasi"], eklendi)
 
     def klasor_cikar(self, k: dict):
         dlg = Adw.AlertDialog(
@@ -391,10 +360,11 @@ class Pencere(Adw.ApplicationWindow):
         self._ayar_zamanlayici = GLib.timeout_add(800, calis)
 
     def otomatik_degisti(self, *_):
-        acik = self.otomatik.get_active()
-        komut = ["enable", "--now"] if acik else ["disable"]
-        arka_planda(lambda: ortak.systemctl(*komut, ortak.SERVIS, ortak.DISK_SERVISI),
-                    lambda _r: self.yenile())
+        if self.otomatik.get_active():
+            arka_planda(lambda: servisleri_uygula(ortak.ayar_oku()), lambda _r: self.yenile())
+        else:
+            arka_planda(lambda: ortak.systemctl("disable", ortak.SERVIS, ortak.DISK_SERVISI),
+                        lambda _r: self.yenile())
 
     def kayitlari_goster(self):
         r = subprocess.run(["journalctl", "--user", "-u", ortak.SERVIS, "-u", ortak.DISK_SERVISI,
@@ -411,8 +381,8 @@ class Pencere(Adw.ApplicationWindow):
 
     def hakkinda(self):
         Adw.AboutDialog(
-            application_name="Drive Bağlantı", application_icon="folder-remote",
-            version=SURUM, developer_name="abdullahnil",
+            application_name="Drive Bağlantı", application_icon=ortak.UYGULAMA_KIMLIGI,
+            version=ortak.SURUM, developer_name="abdullahnil",
             comments="Google Drive'ı disk olarak bağlar ve klasörleri iki yönlü eşitler (rclone).",
             website="https://github.com/abdullahnil/drive-baglanti",
             license_type=Gtk.License.MIT_X11,
@@ -424,8 +394,19 @@ class Uygulama(Adw.Application):
         super().__init__(application_id=ortak.UYGULAMA_KIMLIGI, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
 
     def do_activate(self):
-        pencere = self.props.active_window or Pencere(self)
-        pencere.present()
+        if self.props.active_window:
+            self.props.active_window.present()
+        elif not ortak.ayar_oku()["kurulum_tamam"] or not ortak.rclone_yolu():
+            self.sihirbazi_ac()
+        else:
+            Pencere(self).present()
+
+    def sihirbazi_ac(self):
+        from .sihirbaz import Sihirbaz
+        for p in self.get_windows():
+            if isinstance(p, Pencere):
+                p.close()
+        Sihirbaz(self, lambda: Pencere(self).present()).present()
 
 
 def main():
