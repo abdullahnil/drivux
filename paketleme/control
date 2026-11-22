@@ -1,0 +1,13 @@
+Package: drive-baglanti
+Version: @SURUM@
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: abdullahnil <https://github.com/abdullahnil>
+Depends: python3, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1 (>= 1.5), fuse3, libnotify-bin
+Recommends: rclone
+Homepage: https://github.com/abdullahnil/drive-baglanti
+Description: Google Drive'ı disk olarak bağlar ve klasörleri eşitler
+ Drive Bağlantı, rclone üzerine kurulu GNOME tarzı bir Google Drive istemcisidir.
+ Drive'ı Dosyalar'da bir disk olarak bağlar ve seçilen klasörleri iki yönlü
+ eşitler. İlk açılışta bir sihirbaz rclone'u kurar ve Google hesabını bağlar.
