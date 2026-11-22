@@ -2,16 +2,23 @@
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
 
+SURUM = "1.1.0"
+EN_DUSUK_RCLONE = (1, 66, 0)   # bisync --resilient/--recover/--conflict-resolve için
 UYGULAMA_KIMLIGI = "io.github.abdullahnil.DriveBaglanti"
 SERVIS = "drive-baglanti.service"
 DISK_SERVISI = "drive-baglanti-disk.service"
 
 _config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
 _state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
+_data = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
+
+OZEL_RCLONE = _data / "drive-baglanti" / "bin" / "rclone"   # uygulamanın kendi indirdiği rclone
 
 AYAR_DOSYASI = _config / "drive-baglanti" / "ayar.json"
 DURUM_KLASORU = _state / "drive-baglanti"
@@ -24,7 +31,10 @@ VARSAYILAN_AYAR = {
     "aralik_dk": 5,                       # düzenli eşitleme aralığı
     "onbellek_gb": 10,                    # disk için yerel önbellek sınırı
     "en_fazla_silme": 50,                 # bundan fazla silmede eşitleme durur
+    "disk": True,                         # Drive disk olarak bağlansın mı
+    "gdocs": "baglanti",                  # Google Docs: "baglanti" (tarayıcıda açılır) | "gizle"
     "klasorler": [],                      # [{"yerel": "~/...", "uzak": "klasor", "hazir": bool}]
+    "kurulum_tamam": False,               # ilk açılış sihirbazı tamamlandı mı
 }
 
 
@@ -56,7 +66,11 @@ def _oku(dosya: Path, varsayilan):
 
 def ayar_oku() -> dict:
     ayar = dict(VARSAYILAN_AYAR)
-    ayar.update(_oku(AYAR_DOSYASI, {}))
+    dosyadaki = _oku(AYAR_DOSYASI, {})
+    if dosyadaki and "kurulum_tamam" not in dosyadaki:
+        dosyadaki["kurulum_tamam"] = True   # 1.0 sürümünden kalan ayar: kurulum yapılmış
+    ayar.update(dosyadaki)
+    ayar["klasorler"] = [dict(k) for k in ayar["klasorler"]]
     return ayar
 
 
@@ -106,3 +120,62 @@ def servise_sinyal(sinyal: str) -> None:
 def disk_bagli(ayar: dict | None = None) -> bool:
     ayar = ayar or ayar_oku()
     return os.path.ismount(yol(ayar["baglama_noktasi"]))
+
+
+# ---------- rclone ----------
+_rclone_onbellek: dict = {}
+
+
+def rclone_surumu(yol: str | Path) -> tuple | None:
+    try:
+        r = subprocess.run([str(yol), "version"], capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    m = re.search(r"rclone v(\d+)\.(\d+)\.(\d+)", r.stdout)
+    return tuple(int(x) for x in m.groups()) if m else None
+
+
+def rclone_adaylari() -> list[tuple[str, tuple | None]]:
+    """Bulunan tüm rclone'lar ve sürümleri (önce uygulamanınki)."""
+    adaylar = [OZEL_RCLONE, shutil.which("rclone"), Path.home() / ".local/bin/rclone", "/usr/bin/rclone"]
+    gorulen, sonuc = set(), []
+    for a in adaylar:
+        if not a or not Path(a).is_file():
+            continue
+        gercek = os.path.realpath(a)
+        if gercek in gorulen:
+            continue
+        gorulen.add(gercek)
+        sonuc.append((str(a), rclone_surumu(a)))
+    return sonuc
+
+
+def rclone_yolu(yenile: bool = False) -> str | None:
+    """Yeterince yeni ilk rclone'un yolu; yoksa None."""
+    if yenile or "yol" not in _rclone_onbellek:
+        _rclone_onbellek["yol"] = next(
+            (y for y, s in rclone_adaylari() if s and s >= EN_DUSUK_RCLONE), None)
+    return _rclone_onbellek["yol"]
+
+
+def rclone(*args: str) -> list[str]:
+    return [rclone_yolu() or "rclone", *args]
+
+
+def surum_metni(s: tuple | None) -> str:
+    return "v" + ".".join(map(str, s)) if s else "bilinmiyor"
+
+
+def drive_baglantilari() -> list[str]:
+    r = subprocess.run(rclone("listremotes", "--type", "drive"), capture_output=True, text=True)
+    return [x.rstrip(":") for x in r.stdout.split() if x.strip()]
+
+
+def yer_imi_ekle(yol: Path, ad: str = "Google Drive") -> None:
+    dosya = Path.home() / ".config/gtk-3.0/bookmarks"
+    dosya.parent.mkdir(parents=True, exist_ok=True)
+    satirlar = dosya.read_text().splitlines() if dosya.exists() else []
+    uri = yol.as_uri()
+    if not any(s.split(" ")[0] == uri for s in satirlar):
+        satirlar.append(f"{uri} {ad}")
+        dosya.write_text("\n".join(satirlar) + "\n")
