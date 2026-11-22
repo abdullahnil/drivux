@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drivux — Linux için Google Drive istemcisi</title>
+<meta name="description" content="Drivux: Linux için sade bir Google Drive istemcisi. Drive'ı disk olarak bağlar, klasörlerini iki yönlü eşitler. GTK 4 + libadwaita, rclone ile.">
+<meta property="og:title" content="Drivux">
+<meta property="og:description" content="Linux için sade bir Google Drive istemcisi. Drive'ı disk olarak bağlar, klasörlerini iki yönlü eşitler.">
+<meta property="og:image" content="https://abdullahnil.github.io/drivux/logo.png">
+<meta property="og:url" content="https://abdullahnil.github.io/drivux/">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --bg2:#ffffff; --fg:#1b1d22; --muted:#5d6370; --line:#e3e6eb;
+  --card:#ffffff; --code:#14161b; --code-fg:#e6e8ec; --chip:#eef1f5;
+  --green:#34a853; --yellow:#fbbc04; --blue:#4285f4; --red:#ea4335;
+  --accent:#3b6fe0; --accent-soft:rgba(66,133,244,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 30px rgba(20,30,60,.08);
+  --win:#fafafb; --win-head:#ebedf0; --row:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181d; --bg2:#1c1f25; --fg:#eceef2; --muted:#9aa1ad; --line:#2b2f37;
+    --card:#1f2229; --code:#0e1014; --code-fg:#e6e8ec; --chip:#262a32;
+    --accent:#7aa5ff; --accent-soft:rgba(122,165,255,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 40px rgba(0,0,0,.35);
+    --win:#24272e; --win-head:#2d3038; --row:#2a2d35;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181d; --bg2:#1c1f25; --fg:#eceef2; --muted:#9aa1ad; --line:#2b2f37;
+  --card:#1f2229; --code:#0e1014; --code-fg:#e6e8ec; --chip:#262a32;
+  --accent:#7aa5ff; --accent-soft:rgba(122,165,255,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 40px rgba(0,0,0,.35);
+  --win:#24272e; --win-head:#2d3038; --row:#2a2d35;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code,pre{font-family:"JetBrains Mono",ui-monospace,monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s}
+nav.scrolled{border-bottom-color:var(--line)}
+nav .wrap{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;color:var(--fg)}
+.brand:hover{text-decoration:none}
+.brand img{width:34px;height:34px}
+.navlinks{display:flex;gap:22px;margin-left:auto}
+.navlinks a{color:var(--muted);font-size:15px;font-weight:500}
+.navlinks a:hover{color:var(--fg);text-decoration:none}
+.tools{display:flex;gap:6px}
+.iconbtn{height:36px;min-width:36px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 13px Inter,sans-serif;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.iconbtn:hover{border-color:var(--muted)}
+.iconbtn svg{width:18px;height:18px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:15px;border:1px solid transparent;transition:transform .15s,box-shadow .15s}
+.btn:hover{text-decoration:none;transform:translateY(-1px)}
+.btn svg{width:18px;height:18px}
+.btn.primary{background:var(--fg);color:var(--bg)}
+.btn.primary:hover{box-shadow:var(--shadow)}
+.btn.ghost{border-color:var(--line);color:var(--fg);background:var(--card)}
+
+/* hero */
+.hero{padding:72px 0 40px;position:relative}
+.hero::before{content:"";position:absolute;inset:-200px 0 auto 0;height:700px;z-index:-1;
+  background:radial-gradient(500px 300px at 15% 30%,rgba(52,168,83,.13),transparent 70%),
+             radial-gradient(500px 300px at 85% 20%,rgba(251,188,4,.13),transparent 70%),
+             radial-gradient(600px 300px at 55% 75%,rgba(66,133,244,.14),transparent 70%)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--muted);font-weight:500}
+.badge b{background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:999px;font-weight:600}
+h1{font-size:clamp(38px,5.4vw,60px);line-height:1.05;letter-spacing:-.035em;margin:20px 0 18px;font-weight:800}
+h1 .grad{background:linear-gradient(90deg,var(--green),#9fb92a 35%,var(--yellow) 55%,var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:19px;color:var(--muted);max-width:540px;margin:0 0 28px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:28px;color:var(--muted);font-size:14px}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.meta svg{width:16px;height:16px;color:var(--green)}
+
+/* app mock */
+.win{background:var(--win);border-radius:16px;box-shadow:0 30px 80px rgba(20,30,60,.18),0 0 0 1px var(--line);overflow:hidden;font-size:14px}
+.win-head{height:46px;background:var(--win-head);display:flex;align-items:center;padding:0 12px;position:relative}
+.win-head .title{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:14px;pointer-events:none}
+.win-head .ctrls{margin-left:auto;display:flex;gap:8px}
+.win-head .ctrls i{width:14px;height:14px;border-radius:50%;background:color-mix(in srgb,var(--muted) 30%,transparent)}
+.win-head .hb{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.win-head .hb svg{width:16px;height:16px}
+.win-body{padding:20px}
+.status{display:flex;align-items:center;gap:14px;padding:4px 4px 18px}
+.status .ok{width:44px;height:44px;border-radius:50%;background:rgba(52,168,83,.15);color:var(--green);display:grid;place-items:center}
+.status .ok svg{width:24px;height:24px}
+.status h4{margin:0;font-size:16px}
+.status p{margin:0;color:var(--muted);font-size:13px}
+.group-t{font-weight:700;font-size:13px;margin:6px 4px 8px}
+.list{background:var(--row);border-radius:12px;box-shadow:0 0 0 1px var(--line);overflow:hidden;margin-bottom:16px}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .fi{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--chip);color:var(--muted)}
+.row .fi svg{width:16px;height:16px}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:600;font-size:14px}
+.row .t small{color:var(--muted);font-size:12px}
+.row .st{font-size:12px;color:var(--green);display:flex;align-items:center;gap:5px}
+.row .st.sync{color:var(--accent)}
+.row .st.sync svg{animation:spin 1.4s linear infinite}
+.row .st svg{width:14px;height:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bar{height:10px;border-radius:99px;background:var(--chip);display:flex;overflow:hidden;margin:10px 0 10px}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+.storage{padding:12px 14px}
+.storage .top{display:flex;justify-content:space-between;font-size:13px}
+.storage .top b{font-weight:600}
+.hero-visual{position:relative}
+.toast{position:absolute;left:-28px;bottom:-22px;background:var(--card);border-radius:14px;box-shadow:var(--shadow),0 0 0 1px var(--line);padding:12px 14px;display:flex;gap:10px;align-items:center;font-size:13px;max-width:260px;animation:float 5s ease-in-out infinite}
+.toast img{width:28px;height:28px}
+.toast b{display:block;font-size:13px}
+.toast span{color:var(--muted);font-size:12px}
+@keyframes float{50%{transform:translateY(-6px)}}
+
+/* sections */
+section{padding:84px 0}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.025em;line-height:1.15;margin:10px 0 14px;font-weight:800}
+.sub{color:var(--muted);font-size:18px;max-width:640px;margin:0}
+.head{margin-bottom:44px}
+.head.center{text-align:center}
+.head.center .sub{margin:0 auto}
+
+/* two modes */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.mode{background:var(--card);border-radius:20px;padding:30px;box-shadow:0 0 0 1px var(--line);position:relative;overflow:hidden}
+.mode .num{position:absolute;right:22px;top:10px;font-size:90px;font-weight:800;line-height:1;opacity:.07}
+.mode .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;margin-bottom:18px;color:#fff}
+.mode .ic svg{width:26px;height:26px}
+.mode h3{margin:0 0 8px;font-size:22px;letter-spacing:-.01em}
+.mode p{margin:0;color:var(--muted)}
+.mode ul{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px}
+.mode li{display:flex;gap:10px;align-items:flex-start}
+.mode li svg{flex:none;width:18px;height:18px;margin-top:3px}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat{background:var(--card);border-radius:16px;padding:24px;box-shadow:0 0 0 1px var(--line);transition:transform .2s,box-shadow .2s}
+.feat:hover{transform:translateY(-3px);box-shadow:0 0 0 1px var(--line),var(--shadow)}
+.feat .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;margin-bottom:14px}
+.feat .ic svg{width:21px;height:21px}
+.feat h3{margin:0 0 6px;font-size:17px}
+.feat p{margin:0;color:var(--muted);font-size:15px}
+.c-g{background:rgba(52,168,83,.13);color:var(--green)}
+.c-y{background:rgba(251,188,4,.16);color:#c99400}
+.c-b{background:rgba(66,133,244,.13);color:var(--blue)}
+.c-r{background:rgba(234,67,53,.12);color:var(--red)}
+:root[data-theme="dark"] .c-y{color:var(--yellow)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .c-y{color:var(--yellow)}}
+
+/* install */
+.install{display:grid;grid-template-columns:1fr 1.25fr;gap:40px;align-items:start}
+.tabs{display:flex;gap:4px;background:var(--chip);padding:4px;border-radius:12px;margin-bottom:14px;flex-wrap:wrap}
+.tab{flex:1;border:0;background:transparent;color:var(--muted);font:600 14px Inter,sans-serif;padding:9px 12px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.term{background:var(--code);color:var(--code-fg);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.term-h{display:flex;align-items:center;gap:7px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.term-h i{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.15)}
+.term-h .copy{margin-left:auto;background:rgba(255,255,255,.08);border:0;color:#c8ccd4;font:500 12px Inter,sans-serif;padding:5px 10px;border-radius:7px;cursor:pointer}
+.term-h .copy:hover{background:rgba(255,255,255,.15)}
+.term pre{margin:0;padding:18px 20px;font-size:14px;line-height:1.75;overflow-x:auto}
+.term .c{color:#7d8592}
+.term .p{color:#5fd38a;user-select:none}
+.pane[hidden]{display:none}
+.note{font-size:14px;color:var(--muted);margin-top:14px}
+.reqs{display:grid;gap:12px;margin-top:26px}
+.req{display:flex;gap:12px;align-items:flex-start;background:var(--card);padding:14px 16px;border-radius:12px;box-shadow:0 0 0 1px var(--line);font-size:15px}
+.req svg{flex:none;width:20px;height:20px;color:var(--accent);margin-top:2px}
+.req small{display:block;color:var(--muted);font-size:13px}
+.distros{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.distros span{font-size:13px;font-weight:500;padding:6px 12px;border-radius:999px;background:var(--card);box-shadow:0 0 0 1px var(--line);color:var(--muted)}
+
+/* how */
+.arch{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative}
+.part{background:var(--card);border-radius:16px;padding:22px;box-shadow:0 0 0 1px var(--line)}
+.part code{display:inline-block;font-size:13px;background:var(--chip);padding:3px 8px;border-radius:6px;margin-bottom:12px}
+.part p{margin:0;color:var(--muted);font-size:15px}
+.paths{margin-top:20px;background:var(--card);border-radius:16px;box-shadow:0 0 0 1px var(--line);overflow:hidden}
+.paths div{display:grid;grid-template-columns:200px 1fr;gap:12px;padding:12px 20px;border-top:1px solid var(--line);font-size:14px}
+.paths div:first-child{border-top:0}
+.paths span{color:var(--muted)}
+.paths code{font-size:13px;word-break:break-all}
+
+/* cli */
+.cli{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+
+/* faq */
+.faq{max-width:780px;margin:0 auto;display:grid;gap:10px}
+details{background:var(--card);border-radius:14px;box-shadow:0 0 0 1px var(--line);padding:0 20px}
+summary{cursor:pointer;list-style:none;padding:18px 0;font-weight:600;display:flex;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";margin-left:auto;width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s;flex:none}
+details[open] summary::after{transform:rotate(-135deg)}
+details p{margin:0 0 18px;color:var(--muted)}
+
+/* final cta */
+.final{background:var(--card);border-radius:28px;padding:56px 32px;text-align:center;box-shadow:0 0 0 1px var(--line);position:relative;overflow:hidden}
+.final::before{content:"";position:absolute;inset:0;z-index:0;background:radial-gradient(400px 200px at 20% 0%,rgba(52,168,83,.12),transparent),radial-gradient(400px 200px at 80% 100%,rgba(66,133,244,.12),transparent)}
+.final > *{position:relative}
+.final img{width:84px;height:84px}
+.final .cta{justify-content:center;margin-top:24px}
+
+footer{padding:40px 0 50px;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;border-top:1px solid var(--line);padding-top:28px}
+footer .links{display:flex;gap:18px}
+footer .links a{color:var(--muted)}
+.disclaimer{flex-basis:100%;font-size:12.5px;opacity:.85}
+
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){.reveal{opacity:1;transform:none;transition:none}.toast,.row .st.sync svg{animation:none}html{scroll-behavior:auto}}
+
+@media (max-width:920px){
+  .hero .wrap,.install,.cli{grid-template-columns:1fr}
+  .hero{padding-top:44px}
+  .features{grid-template-columns:1fr 1fr}
+  .arch{grid-template-columns:1fr}
+  .navlinks{display:none}
+  .tools{margin-left:auto}
+  .toast{left:12px}
+}
+@media (max-width:620px){
+  .wrap{padding:0 16px}
+  .modes,.features{grid-template-columns:1fr}
+  section{padding:60px 0}
+  .paths div{grid-template-columns:1fr;gap:2px}
+  .toast{display:none}
+  .lead{font-size:17px}
+  .final{padding:40px 20px}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.3L4 9M4 13a8 8 0 0 0 14.3 4.3L20 15"/><path d="M4 4v5h5M20 20v-5h-5"/></symbol>
+  <symbol id="i-disk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M5 13l2.5-7h9L19 13M7 16.5h.01"/></symbol>
+  <symbol id="i-github" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L15 9M14 4v2M19 9h2M17.5 5.5l1.5-1.5M10 5l.5 1.5M18 13l1.5.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-pie" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3v8M7 6.3a7 7 0 1 0 10 0"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+</svg>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="logo.svg" alt="">Drivux</a>
+    <div class="navlinks">
+      <a href="#features" data-i18n="nav.features">Özellikler</a>
+      <a href="#install" data-i18n="nav.install">Kurulum</a>
+      <a href="#how" data-i18n="nav.how">Nasıl çalışır?</a>
+      <a href="#faq" data-i18n="nav.faq">SSS</a>
+    </div>
+    <div class="tools">
+      <button class="iconbtn" id="langBtn" aria-label="Language">EN</button>
+      <button class="iconbtn" id="themeBtn" aria-label="Tema"><svg><use href="#i-moon"/></svg></button>
+      <a class="iconbtn" href="https://github.com/abdullahnil/drivux" aria-label="GitHub"><svg><use href="#i-github"/></svg></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <span class="badge"><b data-ver>v{{VERSION}}</b><span data-i18n="hero.badge">GTK 4 + libadwaita · MIT lisanslı</span></span>
+      <h1><span data-i18n="hero.t1">Google Drive,</span><br><span class="grad" data-i18n="hero.t2">Linux'ta yerinde.</span></h1>
+      <p class="lead" data-i18n="hero.lead">Drivux, Drive'ını Dosyalar'da bir disk olarak bağlar ve seçtiğin klasörleri iki yönlü eşitler. Sade bir arayüz, adım adım kurulum sihirbazı ve arkasında güvenilir rclone.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/abdullahnil/drivux/releases/latest"><svg><use href="#i-dl"/></svg><span data-i18n="cta.download">İndir</span></a>
+        <a class="btn ghost" href="https://github.com/abdullahnil/drivux"><svg><use href="#i-github"/></svg><span data-i18n="cta.source">Kaynak kod</span></a>
+      </div>
+      <div class="meta">
+        <span><svg><use href="#i-check"/></svg><span data-i18n="meta.1">Yönetici yetkisi gerekmez</span></span>
+        <span><svg><use href="#i-check"/></svg><span data-i18n="meta.2">.rpm ve .deb paketleri</span></span>
+        <span><svg><use href="#i-check"/></svg><span data-i18n="meta.3">Türkçe ve İngilizce</span></span>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="win" role="img" aria-label="Drivux uygulama penceresi">
+        <div class="win-head">
+          <span class="hb"><svg><use href="#i-sync"/></svg></span>
+          <span class="title">Drivux</span>
+          <span class="hb" style="margin-left:auto"><svg><use href="#i-menu"/></svg></span>
+          <span class="ctrls" style="margin-left:6px"><i></i></span>
+        </div>
+        <div class="win-body">
+          <div class="status">
+            <div class="ok"><svg><use href="#i-check"/></svg></div>
+            <div><h4 data-i18n="mock.ok">Her şey güncel</h4><p data-i18n="mock.okSub">Disk bağlı · son eşitleme 2 dk önce</p></div>
+          </div>
+          <div class="group-t" data-i18n="mock.folders">Eşitlenen klasörler</div>
+          <div class="list">
+            <div class="row"><span class="fi"><svg><use href="#i-folder"/></svg></span><span class="t"><b data-i18n="mock.f1">Belgeler</b><small>~/Belgeler</small></span><span class="st"><svg><use href="#i-check"/></svg><span data-i18n="mock.s1">2 dk önce</span></span></div>
+            <div class="row"><span class="fi"><svg><use href="#i-folder"/></svg></span><span class="t"><b data-i18n="mock.f2">Projeler</b><small>~/Projeler</small></span><span class="st sync"><svg><use href="#i-sync"/></svg><span data-i18n="mock.s2">Eşitleniyor</span></span></div>
+            <div class="row"><span class="fi"><svg><use href="#i-folder"/></svg></span><span class="t"><b data-i18n="mock.f3">Fotoğraflar</b><small>~/Resimler/Drive</small></span><span class="st"><svg><use href="#i-check"/></svg><span data-i18n="mock.s3">1 sa önce</span></span></div>
+          </div>
+          <div class="group-t" data-i18n="mock.storage">Depolama</div>
+          <div class="list storage">
+            <div class="top"><b data-i18n="mock.used">15 GB'ın 9,4 GB'ı kullanılıyor</b><span>63%</span></div>
+            <div class="bar"><i style="width:38%;background:var(--blue)"></i><i style="width:25%;background:var(--yellow)"></i></div>
+            <div class="legend">
+              <span><i style="background:var(--blue)"></i>Drive 5,7 GB</span>
+              <span><i style="background:var(--yellow)"></i><span data-i18n="mock.gp">Gmail ve Fotoğraflar</span> 3,7 GB</span>
+              <span><i style="background:var(--chip);box-shadow:0 0 0 1px var(--line)"></i><span data-i18n="mock.free">Boş</span> 5,6 GB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="toast"><img src="logo.svg" alt=""><div><b data-i18n="toast.t">Her şey güncel</b><span data-i18n="toast.s">Üst çubuk · son eşitleme az önce</span></div></div>
+    </div>
+  </div>
+</header>
+
+<section id="what">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow" data-i18n="what.eyebrow">Ne yapar?</div>
+      <h2 data-i18n="what.title">İki iş, tek uygulama.</h2>
+      <p class="sub" data-i18n="what.sub">İkisini birlikte de kullanabilirsin, yalnızca birini de.</p>
+    </div>
+    <div class="modes">
+      <div class="mode reveal">
+        <span class="num">1</span>
+        <div class="ic" style="background:var(--blue)"><svg><use href="#i-disk"/></svg></div>
+        <h3 data-i18n="m1.t">Drive'ı disk olarak bağlar</h3>
+        <p data-i18n="m1.p">Drive'ın tamamı Dosyalar'ın kenar çubuğunda “Google Drive” olarak görünür.</p>
+        <ul>
+          <li><svg style="color:var(--blue)"><use href="#i-check"/></svg><span data-i18n="m1.l1">Dosyalar açtıkça indirilir, diskini doldurmaz</span></li>
+          <li><svg style="color:var(--blue)"><use href="#i-check"/></svg><span data-i18n="m1.l2">Önbellek boyutunu sen belirlersin</span></li>
+          <li><svg style="color:var(--blue)"><use href="#i-check"/></svg><span data-i18n="m1.l3">Docs, E-Tablolar ve Slaytlar tek tıkla tarayıcıda açılır</span></li>
+        </ul>
+      </div>
+      <div class="mode reveal">
+        <span class="num">2</span>
+        <div class="ic" style="background:var(--green)"><svg><use href="#i-sync"/></svg></div>
+        <h3 data-i18n="m2.t">Klasörleri iki yönlü eşitler</h3>
+        <p data-i18n="m2.p">Seçtiğin klasörler bilgisayarında da durur ve internet olmadan da açılır.</p>
+        <ul>
+          <li><svg style="color:var(--green)"><use href="#i-check"/></svg><span data-i18n="m2.l1">Değişiklikler ~15 saniyede yüklenir</span></li>
+          <li><svg style="color:var(--green)"><use href="#i-check"/></svg><span data-i18n="m2.l2">Ayrıca düzenli aralıklarla, varsayılan 5 dakikada bir</span></li>
+          <li><svg style="color:var(--green)"><use href="#i-check"/></svg><span data-i18n="m2.l3">Çakışmada hiçbir sürüm kaybolmaz</span></li>
+          <li><svg style="color:var(--green)"><use href="#i-check"/></svg><span data-i18n="m2.l4">Oturum açınca kendiliğinden başlar</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" style="padding-top:20px">
+  <div class="wrap">
+    <div class="head center reveal">
+      <div class="eyebrow" data-i18n="f.eyebrow">Özellikler</div>
+      <h2 data-i18n="f.title">Düşünülmüş ayrıntılar.</h2>
+      <p class="sub" data-i18n="f.sub">Kurduğun andan itibaren kendi başına çalışır; bir şey ters giderse sana haber verir.</p>
+    </div>
+    <div class="features">
+      <div class="feat reveal"><div class="ic c-b"><svg><use href="#i-wand"/></svg></div><h3 data-i18n="f1.t">Kurulum sihirbazı</h3><p data-i18n="f1.p">rclone'u kurar, Google hesabını bağlar, bağlama yerini ve önbelleği sorar, eşitlenecek klasörleri seçtirir.</p></div>
+      <div class="feat reveal"><div class="ic c-g"><svg><use href="#i-shield"/></svg></div><h3 data-i18n="f2.t">rclone'u güvenle kurar</h3><p data-i18n="f2.p">Gerekirse güncel sürümü resmi siteden indirir, SHA256 ile doğrular ve yalnızca senin kullanıcın için kurar.</p></div>
+      <div class="feat reveal"><div class="ic c-y"><svg><use href="#i-doc"/></svg></div><h3 data-i18n="f3.t">Google Docs desteği</h3><p data-i18n="f3.p">Dokümanlar, E-Tablolar ve Slaytlar kısayol dosyası olarak görünür; çift tıklayınca Google'ın düzenleyicisinde açılır.</p></div>
+      <div class="feat reveal"><div class="ic c-r"><svg><use href="#i-pie"/></svg></div><h3 data-i18n="f4.t">Depolamanın tamamı</h3><p data-i18n="f4.p">Drive'ın ve Gmail ile Fotoğraflar'ın ne kadar yer kullandığını ayrı ayrı gösterir; toplam Google'ınkiyle aynıdır.</p></div>
+      <div class="feat reveal"><div class="ic c-b"><svg><use href="#i-trash"/></svg></div><h3 data-i18n="f5.t">Toplu silmeye karşı koruma</h3><p data-i18n="f5.p">Tek bir eşitleme 50'den fazla dosya silecekse durur ve senin onayını bekler.</p></div>
+      <div class="feat reveal"><div class="ic c-g"><svg><use href="#i-copy"/></svg></div><h3 data-i18n="f6.t">Çakışmada veri kaybı yok</h3><p data-i18n="f6.p">Aynı dosya iki tarafta değişirse yeni sürüm kalır, öbürü numaralı bir kopya olarak saklanır.</p></div>
+      <div class="feat reveal"><div class="ic c-y"><svg><use href="#i-bell"/></svg></div><h3 data-i18n="f7.t">Üst çubuk simgesi</h3><p data-i18n="f7.p">Durumu tek bakışta gör, üst çubuktan hemen eşitle. Sorun olursa simge uyarıya döner ve masaüstü bildirimi alırsın.</p></div>
+      <div class="feat reveal"><div class="ic c-r"><svg><use href="#i-bolt"/></svg></div><h3 data-i18n="f8.t">Hızlı gezinme</h3><p data-i18n="f8.p">Disk bağlanır bağlanmaz ilk klasör seviyeleri arka planda okunur; Dosyalar'da klasörler beklemeden açılır.</p></div>
+      <div class="feat reveal"><div class="ic c-b"><svg><use href="#i-globe"/></svg></div><h3 data-i18n="f9.t">Türkçe ve İngilizce</h3><p data-i18n="f9.p">Arayüz sistem dilini izler; istersen ayarlardan dili kendin seçebilirsin.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap install">
+    <div class="reveal">
+      <div class="eyebrow" data-i18n="i.eyebrow">Kurulum</div>
+      <h2 data-i18n="i.title">Bir dakikada hazır.</h2>
+      <p class="sub" data-i18n="i.sub">Dağıtımına uygun paketi kur, uygulama menüsünden Drivux'u aç. Gerisini kurulum sihirbazı halleder.</p>
+      <div class="reqs">
+        <div class="req"><svg><use href="#i-check"/></svg><div><span data-i18n="r1">GTK 4 ve libadwaita 1.5+</span><small data-i18n="r1s">Fedora 40+, Ubuntu 24.04+, Debian 13+</small></div></div>
+        <div class="req"><svg><use href="#i-check"/></svg><div><span>FUSE 3</span><small data-i18n="r2s">Disk özelliği için</small></div></div>
+        <div class="req"><svg><use href="#i-check"/></svg><div><span data-i18n="r3">systemd kullanıcı oturumu</span><small data-i18n="r3s">Arka plan servisleri için</small></div></div>
+        <div class="req"><svg><use href="#i-check"/></svg><div><span data-i18n="r4">AppIndicator (isteğe bağlı)</span><small data-i18n="r4s">Üst çubuk simgesi için; GNOME'da AppIndicator eklentisi</small></div></div>
+      </div>
+      <div class="distros"><span>Fedora</span><span>RHEL</span><span>openSUSE</span><span>Ubuntu</span><span>Debian</span><span>Linux Mint</span><span>Arch</span></div>
+    </div>
+    <div class="reveal">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-pane="rpm">Fedora / RPM</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="deb">Ubuntu / Debian</button>
+        <button class="tab" role="tab" aria-selected="false" data-pane="src" data-i18n="i.tabSrc">Kaynaktan</button>
+      </div>
+      <div class="term">
+        <div class="term-h"><i></i><i></i><i></i><button class="copy" data-i18n="copy">Kopyala</button></div>
+        <div class="pane" data-pane="rpm"><pre><span class="c" data-i18n="c.rpm"># Sürümler sayfasından .rpm dosyasını indir, sonra:</span>
+<span class="p">$ </span><span class="cmd">sudo dnf install ./<span data-file="rpm">drivux-{{VERSION}}-1.noarch.rpm</span></span></pre></div>
+        <div class="pane" data-pane="deb" hidden><pre><span class="c" data-i18n="c.deb"># Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+</span>
+<span class="p">$ </span><span class="cmd">sudo apt install ./<span data-file="deb">drivux_{{VERSION}}_all.deb</span></span></pre></div>
+        <div class="pane" data-pane="src" hidden><pre><span class="p">$ </span><span class="cmd">git clone https://github.com/abdullahnil/drivux.git</span>
+<span class="p">$ </span><span class="cmd">cd drivux</span>
+<span class="p">$ </span><span class="cmd">./kur.sh</span>
+<span class="c" data-i18n="c.src"># dnf, apt, pacman ya da zypper ile bağımlılıkları kurar,
+# Drivux'u ~/.local altına yerleştirir ve sihirbazı açar.</span></pre></div>
+      </div>
+      <div class="cta" style="margin-top:16px">
+        <a class="btn ghost" data-dl="rpm" href="https://github.com/abdullahnil/drivux/releases/latest"><svg><use href="#i-dl"/></svg><span data-file="rpm">drivux-{{VERSION}}-1.noarch.rpm</span></a>
+        <a class="btn ghost" data-dl="deb" href="https://github.com/abdullahnil/drivux/releases/latest"><svg><use href="#i-dl"/></svg><span data-file="deb">drivux_{{VERSION}}_all.deb</span></a>
+      </div>
+      <p class="note" data-i18n-html="i.note">Paketler <a href="https://github.com/abdullahnil/drivux/releases">Sürümler</a> sayfasında. Kaynaktan güncellemek için <code>git pull</code> yapıp <code>./kur.sh</code>'i yeniden çalıştır; ayarların korunur.</p>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="head reveal">
+      <div class="eyebrow" data-i18n="h.eyebrow">Nasıl çalışır?</div>
+      <h2 data-i18n="h.title">Üç küçük parça.</h2>
+      <p class="sub" data-i18n="h.sub">Ağır işi rclone yapar. Drivux onu yönetir, izler ve sana anlaşılır bir arayüz sunar.</p>
+    </div>
+    <div class="arch">
+      <div class="part reveal"><code>drivux-disk.service</code><p data-i18n-html="h1">Drive'ı <b>rclone mount</b> ile ~/Google Drive klasörüne bağlar. Tam VFS önbelleğini kullanır ve ilk klasör seviyelerini önceden okur.</p></div>
+      <div class="part reveal"><code>drivux.service</code><p data-i18n-html="h2">Klasörleri <b>rclone bisync</b> ile eşitleyen Python servisi. Değişiklikleri izler, zamanlamayı yürütür.</p></div>
+      <div class="part reveal"><code>drivux</code><p data-i18n-html="h3">GTK 4 / libadwaita uygulaması ve sihirbaz. Servisle ayar/durum dosyaları ve Unix sinyalleriyle konuşur.</p></div>
+    </div>
+    <div class="paths reveal">
+      <div><span data-i18n="p1">Ayarlar</span><code>~/.config/drivux/ayar.json</code></div>
+      <div><span data-i18n="p2">Durum</span><code>~/.local/state/drivux/durum.json</code></div>
+      <div><span data-i18n="p3">rclone (Drivux kurduysa)</span><code>~/.local/share/drivux/bin/rclone</code></div>
+      <div><span data-i18n="p4">Kayıtlar</span><code>journalctl --user -u drivux -u drivux-disk</code></div>
+    </div>
+  </div>
+</section>
+
+<section id="cli" style="padding-top:20px">
+  <div class="wrap cli">
+    <div class="reveal">
+      <div class="eyebrow" data-i18n="cli.eyebrow">Terminal</div>
+      <h2 data-i18n="cli.title">Terminali sevenler için.</h2>
+      <p class="sub" data-i18n="cli.sub">Eşitlemeyi elle tetikle ya da durumu JSON olarak alıp kendi betiklerinde kullan.</p>
+    </div>
+    <div class="term reveal">
+      <div class="term-h"><i></i><i></i><i></i></div>
+      <pre><span class="p">$ </span>drivux            <span class="c" data-i18n="cli.1"># uygulamayı aç</span>
+<span class="p">$ </span>drivux sync       <span class="c" data-i18n="cli.2"># hemen eşitle</span>
+<span class="p">$ </span>drivux status     <span class="c" data-i18n="cli.3"># durumu JSON olarak yazdır</span>
+<span class="p">$ </span>drivux tray       <span class="c" data-i18n="cli.4"># üst çubuk simgesini göster</span></pre>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="head center reveal">
+      <div class="eyebrow" data-i18n="q.eyebrow">SSS</div>
+      <h2 data-i18n="q.title">Bilinmesi gerekenler.</h2>
+    </div>
+    <div class="faq">
+      <details class="reveal"><summary data-i18n="q1">Eşitleme bir yedek mi?</summary><p data-i18n="a1">Hayır, bir aynadır. Bir dosyayı silersen ya da bozarsan bu değişiklik Drive'a da gider. Drive'dan silinen dosyalar 30 gün boyunca Drive'ın çöp kutusunda durur.</p></details>
+      <details class="reveal"><summary data-i18n="q2">Google Docs dosyaları eşitlenir mi?</summary><p data-i18n="a2">Yalnızca diskte görünürler, klasör eşitlemesine dahil değildirler; çünkü gerçek dosya değil, Google'ın sunucularındaki belgelerdir. Kısayola çift tıklayınca tarayıcıda açılırlar.</p></details>
+      <details class="reveal"><summary data-i18n="q3">Neden kendi client ID'mi kullanmalıyım?</summary><p data-i18n-html="a3">rclone'un tüm kullanıcılarıyla paylaştığı Google client ID'si kullanımdan kaldırılıyor. Erişimini kaybetmemek için sihirbazda “Kendi Google client ID'ni kullan” seçeneğini aç. Nasıl oluşturulacağını <a href="https://rclone.org/drive/#making-your-own-client-id">rclone rehberi</a> anlatıyor.</p></details>
+      <details class="reveal"><summary data-i18n="q4">Eski “Drive Bağlantı” ya da “G-Drivux” sürümünden geçebilir miyim?</summary><p data-i18n="a4">Evet. Drivux ilk çalıştığında ayarların, eşitleme durumun ve indirilmiş rclone yeni adlara kendiliğinden taşınır, eski servisler de kapatılır.</p></details>
+      <details class="reveal"><summary data-i18n="q7">Dosyalar'da Drive neden ilk açılışta yavaş olabilir?</summary><p data-i18n-html="a7">Dosyalar uygulaması Drive diskini yerel bir disk gibi görür ve bir klasörü ilk açtığında küçük resim için fotoğrafları, videoları ve PDF'leri indirir; sonrasında önbellekten gelirler. Bağlantın yavaşsa sınırı <code>gsettings set org.gnome.nautilus.preferences thumbnail-limit 10</code> ile (MB) düşürebilirsin.</p></details>
+      <details class="reveal"><summary data-i18n="q5">Nasıl kaldırırım?</summary><p data-i18n-html="a5">Kaynaktan kurduysan <code>./kaldir.sh</code>, Fedora'da <code>sudo dnf remove drivux</code>, Ubuntu/Debian'da <code>sudo apt remove drivux</code>. Bunların hiçbiri bilgisayardaki ya da Drive'daki dosyalarına dokunmaz.</p></details>
+      <details class="reveal"><summary data-i18n="q6">Yeni bir dil ekleyebilir miyim?</summary><p data-i18n-html="a6">Elbette. <code>drivux/ceviri_tr.py</code> dosyasını <code>ceviri_&lt;kod&gt;.py</code> olarak kopyalayıp çevir, dili <code>ceviri.py</code> içindeki listelere ekle ve <code>python3 paketleme/ceviri-kontrol.py</code> ile kontrol et. Katkılar memnuniyetle karşılanır.</p></details>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="final reveal">
+      <img src="logo.svg" alt="">
+      <h2 data-i18n="end.t">Drive'ını Linux'a getir.</h2>
+      <p class="sub" style="margin:0 auto" data-i18n="end.s">Ücretsiz, açık kaynak ve yalnızca senin kullanıcın için kurulur.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/abdullahnil/drivux/releases/latest"><svg><use href="#i-dl"/></svg><span data-i18n="cta.download">İndir</span></a>
+        <a class="btn ghost" href="https://github.com/abdullahnil/drivux"><svg><use href="#i-github"/></svg><span data-i18n="cta.star">GitHub'da yıldızla</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 abdullahnil · <span data-i18n="foot.lic">MIT lisansı</span></span>
+    <span class="links">
+      <a href="https://github.com/abdullahnil/drivux">GitHub</a>
+      <a href="https://github.com/abdullahnil/drivux/releases" data-i18n="foot.rel">Sürümler</a>
+      <a href="https://github.com/abdullahnil/drivux/issues" data-i18n="foot.iss">Sorun bildir</a>
+      <a href="https://rclone.org">rclone</a>
+    </span>
+    <span class="disclaimer" data-i18n="foot.disc">Drivux'un Google ile bir bağlantısı yoktur ve Google tarafından onaylanmamıştır. Google Drive, Google LLC'nin ticari markasıdır.</span>
+  </div>
+</footer>
+
+<script>
+const EN = {
+  "nav.features":"Features","nav.install":"Install","nav.how":"How it works","nav.faq":"FAQ",
+  "hero.badge":"GTK 4 + libadwaita · MIT licensed",
+  "hero.t1":"Google Drive,","hero.t2":"right at home on Linux.",
+  "hero.lead":"Drivux mounts your Drive as a disk in Files and keeps the folders you choose in two-way sync. A clean interface, a step-by-step setup wizard, and trusty rclone under the hood.",
+  "cta.download":"Download","cta.source":"Source code","cta.star":"Star on GitHub",
+  "meta.1":"No root needed","meta.2":".rpm and .deb packages","meta.3":"English and Turkish",
+  "mock.ok":"Everything is up to date","mock.okSub":"Disk mounted · last sync 2 min ago","mock.folders":"Synced folders",
+  "mock.f1":"Documents","mock.f2":"Projects","mock.f3":"Photos","mock.s1":"2 min ago","mock.s2":"Syncing","mock.s3":"1 hr ago",
+  "mock.storage":"Storage","mock.used":"9.4 GB of 15 GB used","mock.gp":"Gmail and Photos","mock.free":"Free",
+  "toast.t":"Everything is up to date","toast.s":"Top bar · last sync just now",
+  "what.eyebrow":"What it does","what.title":"Two jobs, one app.","what.sub":"Use either one, or both together.",
+  "m1.t":"Mounts Drive as a disk","m1.p":"Your whole Drive shows up in the Files sidebar as “Google Drive”.",
+  "m1.l1":"Files download when you open them, so your disk stays free","m1.l2":"You decide how big the cache can get","m1.l3":"Docs, Sheets and Slides open in your browser with a click",
+  "m2.t":"Syncs folders both ways","m2.p":"The folders you pick stay on your computer and open without an internet connection.",
+  "m2.l1":"Changes upload within ~15 seconds","m2.l2":"Plus a regular schedule, every 5 minutes by default","m2.l3":"No version is ever lost on conflicts","m2.l4":"Starts automatically when you log in",
+  "f.eyebrow":"Features","f.title":"Thoughtful details.","f.sub":"It runs on its own from the moment you set it up, and tells you when something goes wrong.",
+  "f1.t":"Setup wizard","f1.p":"Installs rclone, connects your Google account, asks where to mount and how big the cache can be, and lets you pick folders to sync.",
+  "f2.t":"Installs rclone safely","f2.p":"Downloads the latest release from the official site if needed, verifies it with SHA256, and installs it for your user only.",
+  "f3.t":"Google Docs support","f3.p":"Docs, Sheets and Slides appear as small shortcut files; double-click to open them in Google's own editor.",
+  "f4.t":"Full storage picture","f4.p":"Shows how much Drive uses and how much Gmail and Photos use, so the total matches what Google shows you.",
+  "f5.t":"Mass-deletion guard","f5.p":"If a single sync would delete more than 50 files, it stops and waits for your confirmation.",
+  "f6.t":"No data loss on conflicts","f6.p":"If a file changes on both sides, the newer version wins and the other is kept as a numbered copy.",
+  "f7.t":"Top bar icon","f7.p":"See the status at a glance and sync now from the top bar. If something goes wrong, the icon turns into a warning and you get a desktop notification.",
+  "f8.t":"Fast browsing","f8.p":"As soon as the disk is mounted, the first folder levels are read in the background, so folders open in Files without waiting.",
+  "f9.t":"English and Turkish","f9.p":"The interface follows your system language, or pick one yourself in Settings.",
+  "i.eyebrow":"Install","i.title":"Ready in a minute.","i.sub":"Install the package for your distro and open Drivux from the app menu. The setup wizard takes it from there.",
+  "r1":"GTK 4 and libadwaita 1.5+","r1s":"Fedora 40+, Ubuntu 24.04+, Debian 13+","r2s":"For the disk feature","r3":"systemd user session","r3s":"For the background services","r4":"AppIndicator (optional)","r4s":"For the top bar icon; on GNOME, the AppIndicator extension",
+  "i.tabSrc":"From source","copy":"Copy","copied":"Copied!",
+  "c.rpm":"# Download the .rpm from the Releases page, then:","c.deb":"# Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+",
+  "c.src":"# Installs dependencies via dnf, apt, pacman or zypper,\n# puts Drivux under ~/.local and opens the wizard.",
+  "i.note":"Packages are on the <a href=\"https://github.com/abdullahnil/drivux/releases\">Releases</a> page. To update from source, run <code>git pull</code> and then <code>./kur.sh</code> again; your settings are kept.",
+  "h.eyebrow":"How it works","h.title":"Three small pieces.","h.sub":"rclone does the heavy lifting. Drivux manages it, watches it, and gives you a clear interface.",
+  "h1":"Mounts Drive at ~/Google Drive with <b>rclone mount</b>, using the full VFS cache and reading the first folder levels in advance.",
+  "h2":"A Python service that syncs folders with <b>rclone bisync</b>. Watches for changes and runs the schedule.",
+  "h3":"The GTK 4 / libadwaita app and setup wizard. Talks to the service through settings/state files and Unix signals.",
+  "p1":"Settings","p2":"State","p3":"rclone (if Drivux installed it)","p4":"Logs",
+  "cli.eyebrow":"Terminal","cli.title":"For terminal lovers.","cli.sub":"Trigger a sync by hand, or grab the status as JSON for your own scripts.",
+  "cli.1":"# open the app","cli.2":"# sync now","cli.3":"# print sync status as JSON","cli.4":"# show the top bar icon",
+  "q.eyebrow":"FAQ","q.title":"Good to know.",
+  "q1":"Is sync a backup?","a1":"No, it's a mirror. If you delete or damage a file, that change goes to Drive too. Files deleted from Drive stay in Drive's trash for 30 days.",
+  "q2":"Are Google Docs files synced?","a2":"They only show up on the disk and are not part of folder sync, because they aren't real files but documents on Google's servers. Double-click a shortcut to open it in your browser.",
+  "q3":"Why should I use my own client ID?","a3":"The Google client ID that rclone shares with all its users is being phased out. To keep your access, turn on “Use your own Google client ID” in the wizard. The <a href=\"https://rclone.org/drive/#making-your-own-client-id\">rclone guide</a> explains how to make one.",
+  "q4":"Can I upgrade from “Drive Bağlantı” or “G-Drivux”?","a4":"Yes. On first run Drivux moves your settings, sync state and downloaded rclone to the new names automatically, and turns off the old services.",
+  "q7":"Why can Drive feel slow in Files the first time?","a7":"Files treats the Drive disk like a local disk, so the first time you open a folder it downloads photos, videos and PDFs to make thumbnails; after that they come from the cache. On a slow connection you can lower the limit (in MB) with <code>gsettings set org.gnome.nautilus.preferences thumbnail-limit 10</code>.",
+  "q5":"How do I uninstall?","a5":"Run <code>./kaldir.sh</code> if you installed from source, <code>sudo dnf remove drivux</code> on Fedora, or <code>sudo apt remove drivux</code> on Ubuntu/Debian. None of these touch your files on your computer or in Drive.",
+  "q6":"Can I add a new language?","a6":"Sure. Copy <code>drivux/ceviri_tr.py</code> to <code>ceviri_&lt;code&gt;.py</code> and translate it, add the language to the lists in <code>ceviri.py</code>, and check it with <code>python3 paketleme/ceviri-kontrol.py</code>. Contributions are welcome.",
+  "end.t":"Bring your Drive to Linux.","end.s":"Free, open source, and installed for your user only.",
+  "foot.lic":"MIT License","foot.rel":"Releases","foot.iss":"Report an issue",
+  "foot.disc":"Drivux is not affiliated with or endorsed by Google. Google Drive is a trademark of Google LLC."
+};
+
+// Save the Turkish (default) strings from the page so we can switch back.
+const TR = {};
+document.querySelectorAll("[data-i18n]").forEach(el => TR[el.dataset.i18n] = el.textContent);
+document.querySelectorAll("[data-i18n-html]").forEach(el => TR[el.dataset.i18nHtml] = el.innerHTML);
+TR.copy = "Kopyala"; TR.copied = "Kopyalandı!";
+
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+
+let lang = store.get("drivux-lang") || ((navigator.language||"").toLowerCase().startsWith("tr") ? "tr" : "en");
+const langBtn = document.getElementById("langBtn");
+
+function applyLang(l){
+  lang = l;
+  const d = l === "en" ? EN : TR;
+  document.documentElement.lang = l;
+  document.querySelectorAll("[data-i18n]").forEach(el => { const v = d[el.dataset.i18n]; if (v != null) el.textContent = v; });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { const v = d[el.dataset.i18nHtml]; if (v != null) el.innerHTML = v; });
+  document.title = l === "en" ? "Drivux — Google Drive client for Linux" : "Drivux — Linux için Google Drive istemcisi";
+  langBtn.textContent = l === "en" ? "TR" : "EN";
+  langBtn.setAttribute("aria-label", l === "en" ? "Türkçeye geç" : "Switch to English");
+}
+langBtn.addEventListener("click", () => { const n = lang === "en" ? "tr" : "en"; store.set("drivux-lang", n); applyLang(n); });
+applyLang(lang);
+
+// version: the build fills in the current one; this keeps it right after new releases too
+(async () => {
+  try {
+    const r = await fetch("https://api.github.com/repos/abdullahnil/drivux/releases/latest",
+                          {headers: {"Accept": "application/vnd.github+json"}});
+    if (!r.ok) return;
+    const rel = await r.json();
+    const ver = String(rel.tag_name || "").replace(/^v/, "");
+    if (!/^\d+(\.\d+)*$/.test(ver)) return;
+    document.querySelectorAll("[data-ver]").forEach(el => el.textContent = "v" + ver);
+    for (const a of rel.assets || []) {
+      const kind = a.name.endsWith(".rpm") ? "rpm" : a.name.endsWith(".deb") ? "deb" : null;
+      if (!kind) continue;
+      document.querySelectorAll(`[data-file="${kind}"]`).forEach(el => el.textContent = a.name);
+      document.querySelectorAll(`[data-dl="${kind}"]`).forEach(el => el.href = a.browser_download_url);
+    }
+  } catch (e) { /* offline or rate-limited: keep the version from the build */ }
+})();
+
+// theme
+const themeBtn = document.getElementById("themeBtn");
+const mq = matchMedia("(prefers-color-scheme: dark)");
+function isDark(){ const t = document.documentElement.dataset.theme; return t ? t === "dark" : mq.matches; }
+function paintThemeIcon(){ themeBtn.innerHTML = `<svg><use href="#i-${isDark() ? "sun" : "moon"}"/></svg>`; }
+const savedTheme = store.get("drivux-theme");
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+paintThemeIcon();
+mq.addEventListener?.("change", paintThemeIcon);
+themeBtn.addEventListener("click", () => {
+  const n = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = n; store.set("drivux-theme", n); paintThemeIcon();
+});
+
+// install tabs
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  document.querySelectorAll(".pane").forEach(p => p.hidden = p.dataset.pane !== t.dataset.pane);
+}));
+
+// copy
+document.querySelectorAll(".copy").forEach(b => b.addEventListener("click", async () => {
+  const pane = b.closest(".term").querySelector(".pane:not([hidden])");
+  const text = [...pane.querySelectorAll(".cmd")].map(c => c.textContent).join("\n");
+  try { await navigator.clipboard.writeText(text); } catch(e){}
+  const d = lang === "en" ? EN : TR;
+  b.textContent = d.copied;
+  setTimeout(() => b.textContent = d.copy, 1500);
+}));
+
+// nav border on scroll
+const nav = document.getElementById("nav");
+addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 8), {passive:true});
+
+// reveal on scroll
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } }), {threshold:.12});
+document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+</script>
+</body>
+</html>
