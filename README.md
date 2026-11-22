@@ -1,107 +1,135 @@
-# Drive Bağlantı
+<p align="center">
+  <img src="docs/logo.png" width="128" alt="G-Drivux logo">
+</p>
 
-Linux için Google Drive istemcisi. GNOME görünümünde bir arayüzü var, arka planda [rclone](https://rclone.org) ile çalışır.
+<h1 align="center">G-Drivux</h1>
 
-İki işi birlikte yapar:
+<p align="center">
+  A simple Google Drive client for Linux. It mounts Drive as a disk and keeps your folders in two-way sync.<br>
+  Built with GTK 4 and libadwaita, powered by <a href="https://rclone.org">rclone</a>.
+</p>
 
-1. **Google Drive'ı disk olarak bağlar.** Drive'ın tamamı Dosyalar'ın kenar çubuğunda "Google Drive" olarak görünür. Dosyalar açıldıkça indirilir, bilgisayarda yer kaplamaz.
-2. **Seçtiğin klasörleri iki yönlü eşitler.** Bu klasörler bilgisayarda da durur ve internet olmadan da açılır. Bir tarafta yapılan değişiklik öbür tarafa aktarılır.
+<p align="center">
+  <b>English</b> · <a href="README.tr.md">Türkçe</a>
+</p>
 
-## Özellikler
+---
 
-- **Kurulum sihirbazı:** ilk açılışta her şeyi adım adım sorar.
-  - rclone'u kurar.
-  - Google hesabını bağlar. İstersen kendi client ID'ni de girebilirsin.
-  - Diskin bağlanacağı klasörü ve önbellek boyutunu sorar.
-  - Eşitlenecek klasörleri seçtirir.
-- **rclone dahil:** rclone kurulu değilse ya da çok eskiyse sihirbaz güncel sürümü resmi siteden indirir, SHA256 ile doğrular ve yalnızca bu kullanıcı için kurar. sudo gerekmez.
-- **Google Docs desteği:** Dokümanlar, E-Tablolar ve Slaytlar diskte küçük kısayol dosyaları olarak görünür. Çift tıklayınca tarayıcıda Google'ın kendi düzenleyicisinde açılır.
-- **Arayüz:** genel durum, kullanılan Drive alanı, eşitlenen klasörler ve her birinin son eşitleme zamanı tek pencerede.
-- **Otomatik eşitleme:** klasörde bir değişiklik olunca yaklaşık 15 saniye içinde, bunun dışında da düzenli aralıklarla eşitler.
-- **Hata bildirimi:** bir sorun çıkarsa masaüstü bildirimi gösterir.
-- **Toplu silme koruması:** bir seferde 50'den fazla dosya silinecekse eşitleme durur ve senin onayını bekler.
-- **Çakışmada veri kaybı yok:** aynı dosya iki tarafta birden değişirse yeni sürüm kalır, eski sürüm numaralı bir kopya olarak saklanır.
+## What it does
 
-## Kurulum
+G-Drivux does two things, and you can use either one or both:
 
-### Paketle (önerilen)
+1. **Mounts Google Drive as a disk.** Your whole Drive shows up in the Files sidebar as "Google Drive". Files are downloaded when you open them, so they don't fill up your disk.
+2. **Syncs folders in both directions.** The folders you choose stay on your computer and open without an internet connection. Changes on either side are copied to the other side.
 
-[Sürümler](https://github.com/abdullahnil/drive-baglanti/releases) sayfasından dağıtımına uygun paketi indir:
+## Features
+
+- **Setup wizard.** On first launch a wizard walks you through every step:
+  - installs rclone
+  - connects your Google account, optionally with your own client ID
+  - asks where to mount the disk and how big the cache can get
+  - lets you pick the folders to sync
+- **Installs rclone for you.** If rclone is missing or too old, the wizard downloads the latest release from the official site. It checks the file against rclone's SHA256 checksums and installs it for your user only, so it needs no root access.
+- **Google Docs support.** Docs, Sheets and Slides show up on the disk as small shortcut files. Double-click one and it opens in Google's own editor in your browser.
+- **Status at a glance.** One window shows the overall status, your Drive storage usage, the synced folders and when each was last synced.
+- **Automatic sync.** A change in a synced folder is uploaded within about 15 seconds. G-Drivux also syncs on a regular schedule, every 5 minutes by default.
+- **Error notifications.** When something goes wrong you get a desktop notification. The details are in the log viewer.
+- **Protection against mass deletion.** If a single sync would delete more than 50 files, it stops and waits for your confirmation.
+- **No data loss on conflicts.** If the same file changes on both sides, the newer version wins and the other one is kept as a numbered copy.
+- **Starts with your session.** The disk and the sync both start when you log in.
+
+## Installation
+
+### From a package (recommended)
+
+Download the package for your distribution from the [Releases](https://github.com/abdullahnil/gdrivux/releases) page:
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drive-baglanti-1.1.0-1.noarch.rpm
+sudo dnf install ./gdrivux-1.2.0-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drive-baglanti_1.1.0_all.deb
+sudo apt install ./gdrivux_1.2.0_all.deb
 ```
 
-Sonra uygulama menüsünden **Drive Bağlantı**'yı aç. Kurulum sihirbazı kendiliğinden başlar.
+Then open **G-Drivux** from your app menu and the setup wizard starts.
 
-### Kaynaktan
+### From source
 
 ```bash
-git clone https://github.com/abdullahnil/drive-baglanti.git
-cd drive-baglanti
+git clone https://github.com/abdullahnil/gdrivux.git
+cd gdrivux
 ./kur.sh
 ```
 
-`kur.sh` dağıtımına göre gerekli sistem paketlerini kurar (dnf, apt, pacman ya da zypper). Uygulamayı yalnızca senin kullanıcın için `~/.local` altına kurar ve sihirbazı açar. Güncellemek için `git pull` yapıp `./kur.sh`'i tekrar çalıştırman yeterli; ayarların korunur.
+`kur.sh` does three things:
 
-### Gereksinimler
+- installs the required system packages with your package manager (dnf, apt, pacman or zypper)
+- installs G-Drivux for your user only, under `~/.local`
+- opens the setup wizard
 
-- GTK 4 ve **libadwaita 1.5 veya daha yenisi**. Fedora 40 ve sonrası, Ubuntu 24.04 ve sonrası, Debian 13 ve sonrası bu koşulu karşılar.
-- FUSE 3 (disk özelliği için)
-- systemd kullanıcı oturumu
+To update, run `git pull` and then `./kur.sh` again. Your settings are kept.
 
-### Paket üretmek
+### Requirements
 
-```bash
-./paketleme/paketle.sh   # dist/ klasörüne .rpm ve .deb üretir
-```
+- GTK 4 and **libadwaita 1.5 or newer**. Fedora 40+, Ubuntu 24.04+ and Debian 13+ all qualify.
+- FUSE 3, for the disk feature
+- A systemd user session
 
-Bunun için `rpmbuild` ve `dpkg-deb` gerekir. Fedora'da: `sudo dnf install rpm-build dpkg`.
+## Usage
 
-## Kullanım
+Open **G-Drivux** from your app menu.
 
-Uygulama menüsünden **Drive Bağlantı**'yı aç.
-
-Terminalden:
+From a terminal:
 
 ```bash
-drive-baglanti            # arayüz
-drive-baglanti esitle     # hemen eşitle
-drive-baglanti durum      # eşitleme durumu
+gdrivux            # open the app
+gdrivux esitle     # sync now
+gdrivux durum      # print sync status as JSON
 ```
 
-## Nasıl çalışır?
+> The app's interface is currently in Turkish. An English translation is planned.
 
-| Parça | Görevi |
+## How it works
+
+| Component | Role |
 |---|---|
-| `drive-baglanti-disk.service` | `rclone mount` ile Drive'ı `~/Google Drive` klasörüne bağlar. Tam VFS önbelleği kullanır. |
-| `drive-baglanti.service` | Klasörleri `rclone bisync` ile eşitleyen Python servisi. Klasörleri izler ve zamanlamayı yönetir. |
-| `drive-baglanti` | GTK4 / libadwaita arayüzü ve kurulum sihirbazı. Servisle ayar ve durum dosyaları ve sinyaller üzerinden haberleşir. |
+| `gdrivux-disk.service` | Mounts Drive at `~/Google Drive` with `rclone mount`, using the full VFS cache. |
+| `gdrivux.service` | A Python service that syncs folders with `rclone bisync`. It watches the folders for changes and runs the schedule. |
+| `gdrivux` | The GTK 4 / libadwaita app and setup wizard. It talks to the service through the settings and status files and Unix signals. |
 
-| Dosya | Yer |
+| What | Where |
 |---|---|
-| Ayarlar | `~/.config/drive-baglanti/ayar.json` |
-| Durum | `~/.local/state/drive-baglanti/durum.json` |
-| Kayıtlar | `journalctl --user -u drive-baglanti -u drive-baglanti-disk` |
+| Settings | `~/.config/gdrivux/ayar.json` |
+| Status | `~/.local/state/gdrivux/durum.json` |
+| rclone (if G-Drivux installed it) | `~/.local/share/gdrivux/bin/rclone` |
+| Logs | `journalctl --user -u gdrivux -u gdrivux-disk` |
 
-## Bilinmesi gerekenler
-
-- **Bu bir yedek değil, ayna.** Bir dosyayı silersen ya da bozarsan değişiklik Drive'a da gider. Drive'dan silinen dosyalar 30 gün boyunca Drive'ın çöp kutusunda durur.
-- **Google Docs dosyaları yalnızca diskte görünür.** Klasör eşitlemesine dahil edilmezler, çünkü bunlar gerçek dosya değil, Google'ın sunucusundaki belgelerdir.
-- **Kendi client ID'ni kullan.** rclone'un herkesin kullandığı ortak Google kimliği kapatılmak üzere. Sihirbazda "Kendi Google client ID'ni kullan" seçeneğiyle kendi kimliğini girebilirsin. Nasıl oluşturulacağı için [rclone rehberine](https://rclone.org/drive/#making-your-own-client-id) bak.
-
-## Kaldırma
+### Building packages
 
 ```bash
-./kaldir.sh
+./paketleme/paketle.sh   # writes the .rpm and .deb to dist/
 ```
 
-Paketle kurduysan `sudo dnf remove drive-baglanti` ya da `sudo apt remove drive-baglanti` kullan. Her iki yol da bilgisayardaki ve Drive'daki dosyalara dokunmaz.
+This needs `rpmbuild` and `dpkg-deb`. On Fedora, install them with `sudo dnf install rpm-build dpkg`.
 
-## Lisans
+## Good to know
 
-MIT
+- **Sync is a mirror, not a backup.** If you delete or damage a file, that change goes to Drive as well. Files deleted from Drive stay in Drive's trash for 30 days.
+- **Google Docs files only appear on the disk.** They are not part of folder sync, because they are documents on Google's servers, not real files.
+- **Use your own client ID.** The Google client ID that rclone shares with all its users is being retired. To avoid losing access, turn on "Kendi Google client ID'ni kullan" (Use your own Google client ID) in the wizard and enter your own ID. The [rclone guide](https://rclone.org/drive/#making-your-own-client-id) explains how to create one.
+- **Upgrading from "Drive Bağlantı" (1.1 and older).** G-Drivux used to be called Drive Bağlantı. Your settings, sync state and downloaded rclone move to the new names automatically the first time you run G-Drivux, and the old services are turned off.
+
+## Uninstalling
+
+```bash
+./kaldir.sh                  # if you installed from source
+sudo dnf remove gdrivux      # Fedora
+sudo apt remove gdrivux      # Ubuntu / Debian
+```
+
+None of these touch your files on the computer or on Drive.
+
+## License
+
+[MIT](LICENSE). G-Drivux is not affiliated with or endorsed by Google. Google Drive is a trademark of Google LLC.
