@@ -30,7 +30,7 @@ def log(mesaj: str) -> None:
 
 def bildir(baslik: str, govde: str) -> None:
     subprocess.run(
-        ["notify-send", "-a", "Drive Bağlantı", "-i", "folder-remote", baslik, govde],
+        ["notify-send", "-a", "Drive Bağlantı", "-i", ortak.UYGULAMA_KIMLIGI, baslik, govde],
         capture_output=True,
     )
 
@@ -198,13 +198,13 @@ class Servis:
         return False
 
     def _bisync(self, yerel, uzak, resync: bool, zorla: bool) -> subprocess.CompletedProcess:
-        komut = [
-            "rclone", "bisync", str(yerel), uzak,
+        komut = ortak.rclone(
+            "bisync", str(yerel), uzak,
             "--create-empty-src-dirs", "--resilient", "--recover",
             "--conflict-resolve", "newer", "--conflict-loser", "num",
             "--max-delete", str(self.ayar.get("en_fazla_silme", 50)),
             "--drive-skip-gdocs", "--log-level", "NOTICE",
-        ]
+        )
         if resync:
             komut.append("--resync")
         if zorla:
@@ -227,12 +227,20 @@ class Servis:
 def disk_bagla() -> None:
     """rclone mount'u bu sürecin yerine çalıştırır (systemd Type=notify ile)."""
     ayar = ortak.ayar_oku()
+    rclone = ortak.rclone_yolu()
+    if not rclone:
+        bildir("Drive diski bağlanamadı", "Uygun rclone bulunamadı. Drive Bağlantı'yı açıp kurulumu tamamla.")
+        raise SystemExit("rclone bulunamadı")
     nokta = ortak.yol(ayar["baglama_noktasi"])
     if os.path.ismount(nokta):
         subprocess.run(["fusermount3", "-uz", str(nokta)])
     nokta.mkdir(parents=True, exist_ok=True)
-    os.execvp("rclone", [
-        "rclone", "mount", f"{ayar['uzak']}:", str(nokta),
+    # Google Docs dosyalarının gerçek boyutu bilinmediği için Office biçiminde 0 bayt görünür
+    # ve açılamaz; bunun yerine tarayıcıda açılan küçük bağlantı dosyaları gösterilir.
+    gdocs = (["--drive-export-formats", "link.html"] if ayar.get("gdocs") == "baglanti"
+             else ["--drive-skip-gdocs"])
+    os.execv(rclone, [
+        rclone, "mount", f"{ayar['uzak']}:", str(nokta),
         "--vfs-cache-mode", "full",
         "--vfs-cache-max-size", f"{ayar.get('onbellek_gb', 10)}G",
         "--vfs-cache-max-age", "720h",
@@ -240,6 +248,7 @@ def disk_bagla() -> None:
         "--poll-interval", "30s",
         "--volname", "Google Drive",
         "--log-level", "NOTICE",
+        *gdocs,
     ])
 
 
@@ -250,4 +259,7 @@ def disk_ayir() -> None:
 
 
 def main():
+    if not ortak.rclone_yolu():
+        bildir("Drive eşitlemesi başlatılamadı", "Uygun rclone bulunamadı. Drive Bağlantı'yı açıp kurulumu tamamla.")
+        raise SystemExit("rclone bulunamadı")
     Servis().calistir()
