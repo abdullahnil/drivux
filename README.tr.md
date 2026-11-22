@@ -127,6 +127,7 @@ Arayüz İngilizce yazılır. Çeviriler `drivux/ceviri_<dil>.py` dosyalarında,
 ## Bilinmesi gerekenler
 
 - **Eşitleme bir yedek değil, aynadır.** Bir dosyayı silersen ya da bozarsan bu değişiklik Drive'a da gider. Drive'dan silinen dosyalar 30 gün boyunca Drive'ın çöp kutusunda durur.
+- **Küçük resimler dosyaları indirir.** Dosyalar uygulaması Drive diskini yerel bir disk gibi görür. Bu yüzden bir klasörü ilk açtığında küçük resim oluşturmak için fotoğrafları, videoları ve PDF'leri (varsayılan olarak 50 MB'a kadar) indirir; sonrasında önbellekten gelirler. Bağlantın yavaşsa bu sınırı `gsettings set org.gnome.nautilus.preferences thumbnail-limit 10` komutuyla (MB cinsinden) düşürebilir ya da Dosyalar → Tercihler'den küçük resimleri kapatabilirsin.
 - **Google Docs dosyaları yalnızca diskte görünür.** Klasör eşitlemesine dahil değildir, çünkü bunlar gerçek dosya değil, Google'ın sunucularındaki belgelerdir.
 - **Kendi client ID'ni kullan.** rclone'un bütün kullanıcılarıyla paylaştığı Google client ID'si kullanımdan kaldırılıyor. Erişimini kaybetmemek için sihirbazda "Kendi Google client ID'ni kullan" seçeneğini aç ve kendi ID'ni gir. Nasıl oluşturulacağını [rclone rehberi](https://rclone.org/drive/#making-your-own-client-id) anlatıyor.
 - **Eski bir addan yükseltme.** Drivux'un adı 1.1'e kadar "Drive Bağlantı", 1.2'de "G-Drivux" idi. Drivux'u ilk çalıştırdığında ayarların, eşitleme durumun ve indirilmiş rclone yeni adlara kendiliğinden taşınır, eski servisler de kapatılır.

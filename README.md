@@ -127,6 +127,7 @@ The interface is written in English, and translations live in `drivux/ceviri_<la
 ## Good to know
 
 - **Sync is a mirror, not a backup.** If you delete or damage a file, that change goes to Drive as well. Files deleted from Drive stay in Drive's trash for 30 days.
+- **Thumbnails download files.** The file manager treats the Drive disk like a local disk, so it downloads photos, videos and PDFs (up to 50 MB by default) to make thumbnails the first time you open a folder. After that they come from the cache. On a slow connection you can lower the limit with `gsettings set org.gnome.nautilus.preferences thumbnail-limit 10` (in MB), or turn thumbnails off in Files → Preferences.
 - **Google Docs files only appear on the disk.** They are not part of folder sync, because they are documents on Google's servers, not real files.
 - **Use your own client ID.** The Google client ID that rclone shares with all its users is being retired. To avoid losing access, turn on "Kendi Google client ID'ni kullan" (Use your own Google client ID) in the wizard and enter your own ID. The [rclone guide](https://rclone.org/drive/#making-your-own-client-id) explains how to create one.
 - **Upgrading from an older name.** Drivux was called "Drive Bağlantı" up to 1.1 and "G-Drivux" in 1.2. The first time you run Drivux, your settings, sync state and downloaded rclone move to the new names automatically, and the old services are turned off.
