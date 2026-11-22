@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=%h/.local/bin/drive-baglanti servis
+ExecStart=@BINDIR@/drive-baglanti servis
 Restart=on-failure
 RestartSec=30
 

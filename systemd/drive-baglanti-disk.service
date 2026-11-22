@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=notify
-ExecStart=%h/.local/bin/drive-baglanti disk
-ExecStopPost=%h/.local/bin/drive-baglanti ayir
+ExecStart=@BINDIR@/drive-baglanti disk
+ExecStopPost=@BINDIR@/drive-baglanti ayir
 Restart=on-failure
 RestartSec=15
 
