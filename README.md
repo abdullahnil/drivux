@@ -33,6 +33,7 @@ Drivux does two things, and you can use either one or both:
 - **Google Docs support.** Docs, Sheets and Slides show up on the disk as small shortcut files. Double-click one and it opens in Google's own editor in your browser.
 - **Status at a glance.** One window shows the overall status, the synced folders and when each was last synced.
 - **Full storage picture.** Your Google storage is shared by Drive, Gmail and Google Photos. Drivux shows the total and how much each one uses, so the numbers match what Google shows you.
+- **Top bar icon.** See the sync status at a glance, and sync now, open Drivux or open your Drive from the top bar. You can turn it off in Settings.
 - **English and Turkish.** The interface follows your system language. You can also pick a language in Settings.
 - **Automatic sync.** A change in a synced folder is uploaded within about 15 seconds. Drivux also syncs on a regular schedule, every 5 minutes by default.
 - **Error notifications.** When something goes wrong you get a desktop notification. The details are in the log viewer.
@@ -48,10 +49,10 @@ Download the package for your distribution from the [Releases](https://github.co
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.3.0-1.noarch.rpm
+sudo dnf install ./drivux-1.4.0-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.3.0_all.deb
+sudo apt install ./drivux_1.4.0_all.deb
 ```
 
 Then open **Drivux** from your app menu and the setup wizard starts.
@@ -76,6 +77,7 @@ To update, run `git pull` and then `./kur.sh` again. Your settings are kept.
 
 - GTK 4 and **libadwaita 1.5 or newer**. Fedora 40+, Ubuntu 24.04+ and Debian 13+ all qualify.
 - FUSE 3, for the disk feature
+- For the top bar icon: the AppIndicator library (`libappindicator-gtk3` on Fedora, `gir1.2-ayatanaappindicator3-0.1` on Ubuntu/Debian). On GNOME you also need the [AppIndicator extension](https://extensions.gnome.org/extension/615/appindicator-support/); Ubuntu ships it, and on Fedora it's `gnome-shell-extension-appindicator`.
 - A systemd user session
 
 ## Usage
@@ -88,6 +90,7 @@ From a terminal:
 drivux            # open the app
 drivux sync       # sync now
 drivux status     # print sync status as JSON
+drivux tray       # show the top bar icon
 ```
 
 ## How it works
