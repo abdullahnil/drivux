@@ -34,6 +34,7 @@ Drivux iki iş yapar. İkisini birlikte de kullanabilirsin, yalnızca birini de:
 - **Durum tek bakışta.** Tek pencerede genel durum, eşitlenen klasörler ve her birinin son eşitleme zamanı görünür.
 - **Depolamanın tamamı.** Google depolama alanın Drive, Gmail ve Google Fotoğraflar arasında paylaşılır. Drivux toplamı ve her birinin ne kadar kullandığını gösterir; sayılar Google'ın gösterdiğiyle aynı olur.
 - **Üst çubuk simgesi.** Eşitleme durumunu tek bakışta gör; üst çubuktan hemen eşitle, Drivux'u ya da Drive'ını aç. Ayarlardan kapatabilirsin.
+- **Uygulama içinden güncelleme.** Drivux günde bir kez yeni sürüm olup olmadığına bakar ve varsa pencerenin üstünde bir şerit gösterir. Tek tıkla indirip kurar: paketle kurduysan .rpm ya da .deb paketini, kaynaktan kurduysan kaynak kodu. Menüdeki *Güncellemeleri denetle* ile elle de bakabilir, günlük denetimi Ayarlar'dan kapatabilirsin.
 - **İngilizce ve Türkçe.** Arayüz sistem dilini izler. Ayarlardan dili kendin de seçebilirsin.
 - **Otomatik eşitleme.** Eşitlenen bir klasördeki değişiklik yaklaşık 15 saniye içinde yüklenir. Drivux ayrıca düzenli aralıklarla da eşitler, varsayılan olarak 5 dakikada bir.
 - **Hata bildirimleri.** Bir şey ters giderse masaüstü bildirimi alırsın. Ayrıntılar kayıt görüntüleyicide.
@@ -49,10 +50,10 @@ Dağıtımına uygun paketi [Sürümler](https://github.com/abdullahnil/drivux/r
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.4.0-1.noarch.rpm
+sudo dnf install ./drivux-1.5.0-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.4.0_all.deb
+sudo apt install ./drivux_1.5.0_all.deb
 ```
 
 Ardından uygulama menüsünden **Drivux**'u aç; kurulum sihirbazı başlar.

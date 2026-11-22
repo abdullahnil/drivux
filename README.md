@@ -34,6 +34,7 @@ Drivux does two things, and you can use either one or both:
 - **Status at a glance.** One window shows the overall status, the synced folders and when each was last synced.
 - **Full storage picture.** Your Google storage is shared by Drive, Gmail and Google Photos. Drivux shows the total and how much each one uses, so the numbers match what Google shows you.
 - **Top bar icon.** See the sync status at a glance, and sync now, open Drivux or open your Drive from the top bar. You can turn it off in Settings.
+- **Built-in updates.** Drivux checks for a new release once a day and shows a banner when one is out. One click downloads and installs it: the .rpm or .deb package if you installed a package, or the source release if you installed from source. You can also use *Check for updates* in the menu, or turn the daily check off in Settings.
 - **English and Turkish.** The interface follows your system language. You can also pick a language in Settings.
 - **Automatic sync.** A change in a synced folder is uploaded within about 15 seconds. Drivux also syncs on a regular schedule, every 5 minutes by default.
 - **Error notifications.** When something goes wrong you get a desktop notification. The details are in the log viewer.
@@ -49,10 +50,10 @@ Download the package for your distribution from the [Releases](https://github.co
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.4.0-1.noarch.rpm
+sudo dnf install ./drivux-1.5.0-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.4.0_all.deb
+sudo apt install ./drivux_1.5.0_all.deb
 ```
 
 Then open **Drivux** from your app menu and the setup wizard starts.
