@@ -61,7 +61,7 @@ class Tepsi:
         menu.append(self.durum)
         menu.append(self.alt_durum)
         self.guncelleme = Gtk.MenuItem(label="")
-        self.guncelleme.connect("activate", lambda *_a: _drivux())
+        self.guncelleme.connect("activate", lambda *_a: _drivux("update"))
         menu.append(self.guncelleme)
         menu.append(Gtk.SeparatorMenuItem())
         ac = Gtk.MenuItem(label=_("Open Drivux"))

@@ -518,6 +518,17 @@ def tepsiyi_baslat():
 class Uygulama(Adw.Application):
     def __init__(self):
         super().__init__(application_id=ortak.UYGULAMA_KIMLIGI, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
+        # app.guncelle: open the window and check for updates (used by the top bar icon;
+        # works on an already running Drivux too, because GApplication forwards actions)
+        eylem = Gio.SimpleAction.new("guncelle", None)
+        eylem.connect("activate", lambda *_a: self.guncellemeyi_goster())
+        self.add_action(eylem)
+
+    def guncellemeyi_goster(self):
+        self.activate()
+        pencere = next((p for p in self.get_windows() if isinstance(p, Pencere)), None)
+        if pencere:
+            pencere.guncelleme_denetle(elle=True)
 
     def do_activate(self):
         if ortak.eski_surumden_tasi() and ortak.ayar_oku()["kurulum_tamam"]:
@@ -550,3 +561,17 @@ class Uygulama(Adw.Application):
 
 def main():
     return Uygulama().run([])
+
+
+def guncelleme_ac():
+    """drivux update: show the update dialog, in the running Drivux if there is one."""
+    uyg = Uygulama()
+    uyg.register(None)
+    if uyg.get_is_remote():
+        uyg.activate_action("guncelle", None)
+        return 0
+    def ilk_acilis(*_a):
+        uyg.disconnect(kimlik)            # only once: guncellemeyi_goster() activates again
+        GLib.idle_add(lambda: (uyg.guncellemeyi_goster(), False)[1])
+    kimlik = uyg.connect("activate", ilk_acilis)
+    return uyg.run([])

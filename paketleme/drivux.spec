@@ -38,6 +38,10 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Mon Nov 23 2026 abdullahnil - 1.5.1-1
+- "Update available" in the top bar menu opens the update dialog directly
+- New command: drivux update
+
 * Mon Nov 23 2026 abdullahnil - 1.5.0-1
 - Built-in updates: checks GitHub once a day, installs the new .rpm/.deb or source release
 
