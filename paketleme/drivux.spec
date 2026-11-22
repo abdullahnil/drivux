@@ -1,9 +1,9 @@
-Name:           gdrivux
+Name:           drivux
 Version:        %{surum}
 Release:        1%{?dist}
 Summary:        Google Drive client for Linux: mount Drive as a disk and two-way sync folders
 License:        MIT
-URL:            https://github.com/abdullahnil/gdrivux
+URL:            https://github.com/abdullahnil/drivux
 BuildArch:      noarch
 
 Requires:       python3
@@ -15,7 +15,7 @@ Requires:       libnotify
 Recommends:     rclone
 
 %description
-G-Drivux is a GNOME-style Google Drive client built on rclone. It mounts
+Drivux is a GNOME-style Google Drive client built on rclone. It mounts
 Google Drive as a disk in the file manager and keeps selected folders in
 two-way sync. A first-run wizard installs rclone and connects the account.
 
@@ -23,17 +23,20 @@ two-way sync. A first-run wizard installs rclone and connects the account.
 cp -a %{kaynak}/. %{buildroot}/
 
 %files
-%license /usr/share/licenses/gdrivux/LICENSE
-%doc /usr/share/doc/gdrivux/README.md
-%doc /usr/share/doc/gdrivux/README.tr.md
-/usr/bin/gdrivux
-/usr/share/gdrivux/
-/usr/share/applications/io.github.abdullahnil.GDrivux.desktop
-/usr/share/icons/hicolor/scalable/apps/io.github.abdullahnil.GDrivux.svg
-/usr/lib/systemd/user/gdrivux.service
-/usr/lib/systemd/user/gdrivux-disk.service
+%license /usr/share/licenses/drivux/LICENSE
+%doc /usr/share/doc/drivux/README.md
+%doc /usr/share/doc/drivux/README.tr.md
+/usr/bin/drivux
+/usr/share/drivux/
+/usr/share/applications/io.github.abdullahnil.Drivux.desktop
+/usr/share/icons/hicolor/scalable/apps/io.github.abdullahnil.Drivux.svg
+/usr/lib/systemd/user/drivux.service
+/usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Mon Nov 23 2026 abdullahnil - 1.3.0-1
+- New name: Drivux. English interface (Turkish follows the system language)
+- Storage view shows Drive, Gmail and Google Photos usage separately
 * Mon Nov 23 2026 abdullahnil - 1.2.0-1
 - Yeni ad: G-Drivux; yeni uygulama simgesi; eski Drive Bağlantı kurulumundan otomatik geçiş
 * Mon Nov 23 2026 abdullahnil - 1.1.0-1

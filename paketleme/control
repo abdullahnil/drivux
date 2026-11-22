@@ -1,4 +1,4 @@
-Package: gdrivux
+Package: drivux
 Version: @SURUM@
 Section: utils
 Priority: optional
@@ -6,8 +6,8 @@ Architecture: all
 Maintainer: abdullahnil <https://github.com/abdullahnil>
 Depends: python3, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1 (>= 1.5), fuse3, libnotify-bin
 Recommends: rclone
-Homepage: https://github.com/abdullahnil/gdrivux
+Homepage: https://github.com/abdullahnil/drivux
 Description: Google Drive client: mount Drive as a disk and sync folders
- G-Drivux is a GNOME-style Google Drive client built on rclone. It mounts
+ Drivux is a GNOME-style Google Drive client built on rclone. It mounts
  Google Drive as a disk in the file manager and keeps selected folders in
  two-way sync. A first-run wizard installs rclone and connects the account.

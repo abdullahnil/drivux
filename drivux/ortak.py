@@ -8,20 +8,20 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-SURUM = "1.2.0"
+SURUM = "1.3.0"
 EN_DUSUK_RCLONE = (1, 66, 0)   # bisync --resilient/--recover/--conflict-resolve için
-UYGULAMA_KIMLIGI = "io.github.abdullahnil.GDrivux"
-SERVIS = "gdrivux.service"
-DISK_SERVISI = "gdrivux-disk.service"
+UYGULAMA_KIMLIGI = "io.github.abdullahnil.Drivux"
+SERVIS = "drivux.service"
+DISK_SERVISI = "drivux-disk.service"
 
 _config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
 _state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
 _data = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
 
-OZEL_RCLONE = _data / "gdrivux" / "bin" / "rclone"   # uygulamanın kendi indirdiği rclone
+OZEL_RCLONE = _data / "drivux" / "bin" / "rclone"   # uygulamanın kendi indirdiği rclone
 
-AYAR_DOSYASI = _config / "gdrivux" / "ayar.json"
-DURUM_KLASORU = _state / "gdrivux"
+AYAR_DOSYASI = _config / "drivux" / "ayar.json"
+DURUM_KLASORU = _state / "drivux"
 DURUM_DOSYASI = DURUM_KLASORU / "durum.json"
 ISTEK_DOSYASI = DURUM_KLASORU / "istek.json"
 
@@ -171,7 +171,7 @@ def surum_metni(s: tuple | None) -> str:
     return "v" + ".".join(map(str, s)) if s else "bilinmiyor"
 
 
-def gdrivuxlari() -> list[str]:
+def drive_hesaplari() -> list[str]:
     r = subprocess.run(rclone("listremotes", "--type", "drive"), capture_output=True, text=True)
     return [x.rstrip(":") for x in r.stdout.split() if x.strip()]
 
@@ -186,26 +186,30 @@ def yer_imi_ekle(yol: Path, ad: str = "Google Drive") -> None:
         dosya.write_text("\n".join(satirlar) + "\n")
 
 
-# ---------- eski "Drive Bağlantı" kurulumundan geçiş ----------
-def eski_surumden_tasi() -> bool:
-    """1.1 ve öncesinin (drive-baglanti) ayar, durum ve rclone'unu yeni adlara taşır.
+# ---------- geçiş: eski adlarla yapılmış kurulumlar ----------
+# 1.1 ve öncesi "Drive Bağlantı" (drive-baglanti), 1.2 "G-Drivux" (gdrivux)
+ESKI_ADLAR = ["gdrivux", "drive-baglanti"]   # yeniden eskiye
 
-    Eski kullanıcı servislerini kapatır. Bir şey taşındıysa True döner.
+
+def eski_surumden_tasi() -> bool:
+    """Eski adlarla kurulmuş sürümlerin ayar, durum ve rclone'unu yeni adlara taşır.
+
+    Eski kullanıcı servislerini kapatır. Bir şey yapıldıysa True döner.
     """
     tasindi = False
-    for eski, yeni in ((_config / "drive-baglanti", AYAR_DOSYASI.parent),
-                       (_state / "drive-baglanti", DURUM_KLASORU),
-                       (_data / "drive-baglanti" / "bin", OZEL_RCLONE.parent)):
-        if eski.is_dir() and not yeni.exists():
-            shutil.copytree(eski, yeni, symlinks=True)
+    for eski_ad in ESKI_ADLAR:
+        for eski, yeni in ((_config / eski_ad, AYAR_DOSYASI.parent),
+                           (_state / eski_ad, DURUM_KLASORU),
+                           (_data / eski_ad / "bin", OZEL_RCLONE.parent)):
+            if eski.is_dir() and not yeni.exists():
+                shutil.copytree(eski, yeni, symlinks=True)
+                tasindi = True
+        birimler = [f"{eski_ad}.service", f"{eski_ad}-disk.service"]
+        if any(systemctl("is-enabled", "--quiet", b).returncode == 0 or servis_aktif(b) for b in birimler):
+            systemctl("disable", "--now", *birimler)
             tasindi = True
-    eski_birimler = ["drive-baglanti.service", "drive-baglanti-disk.service"]
-    if any(systemctl("is-enabled", "--quiet", b).returncode == 0 or servis_aktif(b) for b in eski_birimler):
-        systemctl("disable", "--now", *eski_birimler)
-        tasindi = True
-    birim_klasoru = _config / "systemd" / "user"
-    for b in eski_birimler:
-        (birim_klasoru / b).unlink(missing_ok=True)
+        for b in birimler:
+            (_config / "systemd" / "user" / b).unlink(missing_ok=True)
     if tasindi:
         _rclone_onbellek.clear()
         systemctl("daemon-reload")

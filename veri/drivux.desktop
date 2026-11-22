@@ -1,14 +1,14 @@
 [Desktop Entry]
 Type=Application
-Name=G-Drivux
+Name=Drivux
 GenericName=Google Drive Client
 GenericName[tr]=Google Drive İstemcisi
 Comment=Mount Google Drive as a disk and keep folders in sync
 Comment[tr]=Google Drive'ı disk olarak bağla ve klasörleri eşitle
-Exec=gdrivux
-Icon=io.github.abdullahnil.GDrivux
+Exec=drivux
+Icon=io.github.abdullahnil.Drivux
 Terminal=false
 Categories=Network;FileTransfer;
 Keywords=google;drive;gdrive;rclone;sync;mount;cloud;eşitleme;bulut;
 StartupNotify=true
-StartupWMClass=io.github.abdullahnil.GDrivux
+StartupWMClass=io.github.abdullahnil.Drivux

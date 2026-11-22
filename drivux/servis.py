@@ -1,9 +1,9 @@
-"""Arka plan servisi: klasörleri rclone bisync ile iki yönlü eşitler.
+"""Background service: two-way sync of folders with rclone bisync.
 
-- Ayarlanan aralıkla düzenli olarak eşitler.
-- Klasörde bir değişiklik olunca birkaç saniye bekleyip eşitler.
-- USR1 sinyaliyle hemen eşitler, HUP sinyaliyle ayarları yeniden okur.
-- Sonuçları durum dosyasına yazar; hata olunca masaüstü bildirimi gösterir.
+- Syncs on a regular interval.
+- Syncs a few seconds after something changes in a folder.
+- SIGUSR1 syncs right away, SIGHUP reloads the settings.
+- Writes results to the status file and shows a desktop notification on errors.
 """
 
 import os
@@ -18,6 +18,7 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gio, GLib  # noqa: E402
 
 from . import ortak  # noqa: E402
+from .ceviri import _  # noqa: E402
 
 BEKLEME_SN = 15          # son değişiklikten sonra eşitlemeden önce beklenecek süre
 SESSIZ_SN = 5            # eşitlemeden hemen sonra kendi değişikliklerimizi yok say
@@ -30,7 +31,7 @@ def log(mesaj: str) -> None:
 
 def bildir(baslik: str, govde: str) -> None:
     subprocess.run(
-        ["notify-send", "-a", "G-Drivux", "-i", ortak.UYGULAMA_KIMLIGI, baslik, govde],
+        ["notify-send", "-a", "Drivux", "-i", ortak.UYGULAMA_KIMLIGI, baslik, govde],
         capture_output=True,
     )
 
@@ -39,7 +40,7 @@ def rclone_hata_ozeti(cikti: str) -> str:
     satirlar = [s for s in cikti.splitlines() if "ERROR" in s or "Failed" in s or "error" in s]
     if not satirlar:
         satirlar = cikti.strip().splitlines()[-3:]
-    ozet = satirlar[-1] if satirlar else "Bilinmeyen hata"
+    ozet = satirlar[-1] if satirlar else _("Unknown error")
     # "2026/11/22 23:43:32 ERROR : " gibi öneki at
     if " : " in ozet:
         ozet = ozet.split(" : ", 1)[1]
@@ -68,16 +69,16 @@ class Servis:
         self._izlemeleri_kur()
         self._zamanlayici_kur()
         GLib.timeout_add_seconds(20, self._esitle_baslat)  # açılıştan kısa süre sonra
-        log(f"Servis başladı: {len(self.ayar['klasorler'])} klasör, {self.ayar['aralik_dk']} dk aralık")
+        log(f"Service started: {len(self.ayar['klasorler'])} folder(s), every {self.ayar['aralik_dk']} min")
         self.dongu.run()
 
     def _sinyal_esitle(self):
-        log("İstek: hemen eşitle")
+        log("Request: sync now")
         self._esitle_baslat()
         return GLib.SOURCE_CONTINUE
 
     def _sinyal_yenile(self):
-        log("Ayarlar yeniden okunuyor")
+        log("Reloading settings")
         self.ayar = ortak.ayar_oku()
         self._izlemeleri_kur()
         self._zamanlayici_kur()
@@ -174,7 +175,7 @@ class Servis:
         sonuc = self._bisync(yerel, uzak, resync=ilk, zorla=zorla)
         if sonuc.returncode != 0 and not ilk and "--resync" in sonuc.stdout + sonuc.stderr:
             # Önceki kayıtlar kaybolmuş: güvenli birleştirme (resync hiçbir şey silmez)
-            log(f"{yerel}: kayıtlar bulunamadı, birleştirme yapılıyor")
+            log(f"{yerel}: previous listings not found, merging (resync)")
             sonuc = self._bisync(yerel, uzak, resync=True, zorla=zorla)
             ilk = True
 
@@ -183,18 +184,18 @@ class Servis:
         kd.update(calisiyor=False, son=time.time())
         if sonuc.returncode == 0:
             kd.update(sonuc="tamam", mesaj="", silme_siniri=False)
-            log(f"{yerel} <-> {uzak}: tamam")
+            log(f"{yerel} <-> {uzak}: ok")
             if ilk:
                 k["hazir"] = True
                 return True
         else:
             silme = "too many deletes" in cikti.lower() or "max-delete" in cikti.lower()
-            mesaj = (f"{self.ayar['en_fazla_silme']}'den fazla dosya silinecekti, güvenlik için durduruldu."
-                     if silme else rclone_hata_ozeti(cikti))
+            mesaj = (_("More than {n} files were about to be deleted, so the sync was stopped to be safe.")
+                     .format(n=self.ayar["en_fazla_silme"]) if silme else rclone_hata_ozeti(cikti))
             kd.update(sonuc="hata", mesaj=mesaj, silme_siniri=silme)
-            log(f"{yerel} <-> {uzak}: HATA: {mesaj}")
+            log(f"{yerel} <-> {uzak}: ERROR: {mesaj}")
             if not onceki_hata:
-                bildir(f"Eşitleme hatası: {yerel.name}", mesaj)
+                bildir(_("Sync error: {name}").format(name=yerel.name), mesaj)
         return False
 
     def _bisync(self, yerel, uzak, resync: bool, zorla: bool) -> subprocess.CompletedProcess:
@@ -229,8 +230,8 @@ def disk_bagla() -> None:
     ayar = ortak.ayar_oku()
     rclone = ortak.rclone_yolu()
     if not rclone:
-        bildir("Drive diski bağlanamadı", "Uygun rclone bulunamadı. G-Drivux'u açıp kurulumu tamamla.")
-        raise SystemExit("rclone bulunamadı")
+        bildir(_("Couldn't mount the Drive disk"), _("No suitable rclone found. Open Drivux and finish setup."))
+        raise SystemExit("rclone not found")
     nokta = ortak.yol(ayar["baglama_noktasi"])
     _eski_baglantiyi_temizle(nokta)
     nokta.mkdir(parents=True, exist_ok=True)
@@ -270,6 +271,6 @@ def disk_ayir() -> None:
 
 def main():
     if not ortak.rclone_yolu():
-        bildir("Drive eşitlemesi başlatılamadı", "Uygun rclone bulunamadı. G-Drivux'u açıp kurulumu tamamla.")
-        raise SystemExit("rclone bulunamadı")
+        bildir(_("Couldn't start Drive sync"), _("No suitable rclone found. Open Drivux and finish setup."))
+        raise SystemExit("rclone not found")
     Servis().calistir()

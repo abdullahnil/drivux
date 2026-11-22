@@ -14,6 +14,7 @@ import zipfile
 from urllib.request import Request, urlopen
 
 from . import ortak
+from .ceviri import _
 
 TABAN = "https://downloads.rclone.org"
 MIMARI = {"x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm64",
@@ -21,7 +22,7 @@ MIMARI = {"x86_64": "amd64", "amd64": "amd64", "aarch64": "arm64", "arm64": "arm
 
 
 def _indir(url: str, ilerleme=None) -> bytes:
-    istek = Request(url, headers={"User-Agent": f"gdrivux/{ortak.SURUM}"})
+    istek = Request(url, headers={"User-Agent": f"drivux/{ortak.SURUM}"})
     with urlopen(istek, timeout=60) as yanit:
         toplam = int(yanit.headers.get("Content-Length") or 0)
         tampon = io.BytesIO()
@@ -45,26 +46,26 @@ def kur(ilerleme=None, durum=None) -> str:
     durum = durum or (lambda _m: None)
     mimari = MIMARI.get(platform.machine())
     if not mimari:
-        raise RuntimeError(f"Bu işlemci mimarisi desteklenmiyor: {platform.machine()}")
+        raise RuntimeError(_("This processor architecture is not supported: {arch}").format(arch=platform.machine()))
 
-    durum("Güncel sürüm öğreniliyor…")
+    durum(_("Finding the latest version…"))
     surum = guncel_surum()
     ad = f"rclone-{surum}-linux-{mimari}"
 
-    durum("Doğrulama özetleri indiriliyor…")
+    durum(_("Downloading checksums…"))
     ozetler = _indir(f"{TABAN}/{surum}/SHA256SUMS").decode()
     beklenen = next((s.split()[0] for s in ozetler.splitlines() if s.strip().endswith(f"{ad}.zip")), None)
     if not beklenen:
-        raise RuntimeError(f"{ad}.zip için doğrulama özeti bulunamadı")
+        raise RuntimeError(_("No checksum found for {file}").format(file=f"{ad}.zip"))
 
-    durum(f"rclone {surum} indiriliyor…")
+    durum(_("Downloading rclone {version}…").format(version=surum))
     veri = _indir(f"{TABAN}/{surum}/{ad}.zip", ilerleme)
 
-    durum("Dosya doğrulanıyor…")
+    durum(_("Verifying the download…"))
     if hashlib.sha256(veri).hexdigest() != beklenen:
-        raise RuntimeError("İndirilen dosya doğrulanamadı (SHA256 uyuşmuyor). Tekrar dene.")
+        raise RuntimeError(_("The download could not be verified (SHA256 mismatch). Please try again."))
 
-    durum("Kuruluyor…")
+    durum(_("Installing…"))
     hedef = ortak.OZEL_RCLONE
     hedef.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(veri)) as z:
@@ -75,5 +76,5 @@ def kur(ilerleme=None, durum=None) -> str:
     os.replace(gecici, hedef)
 
     ortak.rclone_yolu(yenile=True)
-    durum(f"rclone {surum} kuruldu")
+    durum(_("rclone {version} installed").format(version=surum))
     return str(hedef)

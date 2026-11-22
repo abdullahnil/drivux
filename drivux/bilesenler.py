@@ -1,4 +1,4 @@
-"""Arayüz ile kurulum sihirbazının ortak kullandığı küçük parçalar."""
+"""Small pieces shared by the main window and the setup wizard."""
 
 import threading
 from pathlib import Path
@@ -10,19 +10,21 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from . import ortak  # noqa: E402
+from .ceviri import _  # noqa: E402
 
+# (setting value, English label — translated where it is shown)
 GDOCS_SECENEKLERI = [
-    ("baglanti", "Tarayıcıda açılan kısayol olarak göster"),
-    ("gizle", "Gösterme"),
+    ("baglanti", "Show as shortcuts that open in the browser"),
+    ("gizle", "Don't show"),
 ]
 
 
 def arka_planda(is_, bitince=None):
-    """is_()'i ayrı iş parçacığında çalıştırır, sonucu ana döngüde bitince()'ye verir."""
+    """Runs is_() in a thread and hands the result (or the exception) to bitince() on the main loop."""
     def calis():
         try:
             sonuc = is_()
-        except Exception as e:  # noqa: BLE001 — hatayı arayüze taşı
+        except Exception as e:  # noqa: BLE001 — carry the error to the UI
             sonuc = e
         if bitince:
             GLib.idle_add(bitince, sonuc)
@@ -30,7 +32,7 @@ def arka_planda(is_, bitince=None):
 
 
 def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, eklendi):
-    """Klasör seçtirir, Drive'daki adını sorar; eklendi({"yerel","uzak","hazir"}) çağırır."""
+    """Lets the user pick a folder and its name on Drive, then calls eklendi({"yerel","uzak","hazir"})."""
     def secildi(dialog, sonuc):
         try:
             dosya = dialog.select_folder_finish(sonuc)
@@ -38,23 +40,23 @@ def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, e
             return
         yerel = Path(dosya.get_path())
         if any(ortak.yol(k["yerel"]) == yerel for k in mevcut):
-            _uyari(pencere, "Bu klasör zaten listede.")
+            _uyari(pencere, _("This folder is already in the list."))
             return
         nokta = ortak.yol(baglama_noktasi)
         if yerel in (Path.home(), Path("/")) or yerel == nokta or nokta in yerel.parents:
-            _uyari(pencere, "Bu klasör eşitlenemez. Ev klasörünün kendisini ya da Drive diskinin "
-                            "içini seçme; içinde bir alt klasör seç.")
+            _uyari(pencere, _("This folder can't be synced. Don't pick your home folder itself or a folder "
+                              "inside the Drive disk; pick a folder inside your home folder instead."))
             return
 
         giris = Gtk.Entry(text=yerel.name, activates_default=True)
         dlg = Adw.AlertDialog(
-            heading="Drive'daki klasör adı",
-            body=f"{ortak.kisalt(yerel)} klasörü Google Drive'da hangi klasörle eşitlensin?\n"
-                 "Drive'da yoksa oluşturulur; varsa içerikleri birleştirilir (hiçbir şey silinmez).\n"
-                 "Alt klasör için / kullan, ör. Belgeler/Okul")
+            heading=_("Folder name on Drive"),
+            body=_("Which Google Drive folder should {path} be synced with?\n"
+                   "It is created if it doesn't exist; if it does, the contents are merged (nothing is deleted).\n"
+                   "Use / for subfolders, e.g. Documents/School").format(path=ortak.kisalt(yerel)))
         dlg.set_extra_child(giris)
-        dlg.add_response("iptal", "İptal")
-        dlg.add_response("ekle", "Ekle")
+        dlg.add_response("iptal", _("Cancel"))
+        dlg.add_response("ekle", _("Add"))
         dlg.set_response_appearance("ekle", Adw.ResponseAppearance.SUGGESTED)
         dlg.set_default_response("ekle")
 
@@ -65,17 +67,17 @@ def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, e
         dlg.connect("response", yanit)
         dlg.present(pencere)
 
-    Gtk.FileDialog(title="Eşitlenecek klasörü seç").select_folder(pencere, None, secildi)
+    Gtk.FileDialog(title=_("Choose a folder to sync")).select_folder(pencere, None, secildi)
 
 
 def _uyari(pencere, metin):
-    dlg = Adw.AlertDialog(heading="Olmadı", body=metin)
-    dlg.add_response("tamam", "Tamam")
+    dlg = Adw.AlertDialog(heading=_("That didn't work"), body=metin)
+    dlg.add_response("tamam", _("OK"))
     dlg.present(pencere)
 
 
 def servisleri_uygula(ayar: dict) -> list[str]:
-    """Ayara göre systemd kullanıcı servislerini açar/kapatır. Hata mesajlarını döndürür."""
+    """Enables/starts or disables the systemd user services to match the settings. Returns error messages."""
     hatalar = []
     ortak.systemctl("daemon-reload")
     for servis, acik in ((ortak.SERVIS, True), (ortak.DISK_SERVISI, ayar.get("disk", True))):

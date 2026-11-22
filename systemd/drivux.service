@@ -1,10 +1,10 @@
 [Unit]
-Description=G-Drivux — klasör eşitleme servisi
+Description=Drivux folder sync service
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=@BINDIR@/gdrivux servis
+ExecStart=@BINDIR@/drivux service
 Restart=on-failure
 RestartSec=30
 
