@@ -12,7 +12,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
-from . import ortak  # noqa: E402
+from . import guncelle, ortak  # noqa: E402
 from .bilesenler import GDOCS_SECENEKLERI, arka_planda, klasor_ekle, servisleri_uygula  # noqa: E402
 from .bicim import boyut, gecen_sure  # noqa: E402
 from .ceviri import DIL_ADLARI, _, _n  # noqa: E402
@@ -35,14 +35,21 @@ class Pencere(Adw.ApplicationWindow):
 
         menu = Gio.Menu()
         menu.append(_("Show logs"), "win.kayitlar")
+        menu.append(_("Check for updates"), "win.guncelle")
         menu.append(_("Setup wizard"), "win.sihirbaz")
         menu.append(_("About Drivux"), "win.hakkinda")
         baslik.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu))
         for ad, fn in (("kayitlar", self.kayitlari_goster), ("hakkinda", self.hakkinda),
-                       ("sihirbaz", lambda: uyg.sihirbazi_ac())):
+                       ("sihirbaz", lambda: uyg.sihirbazi_ac()),
+                       ("guncelle", lambda: self.guncelleme_denetle(elle=True))):
             eylem = Gio.SimpleAction.new(ad, None)
             eylem.connect("activate", lambda *_a, f=fn: f())
             self.add_action(eylem)
+
+        self.serit = Adw.Banner(revealed=False, button_label=_("Update"))
+        self.serit.connect("button-clicked", lambda *_a: self.guncelleme_sor(self._yeni_surum))
+        gorunum.add_top_bar(self.serit)
+        self._yeni_surum = None
 
         sayfa = Adw.PreferencesPage()
 
@@ -133,6 +140,12 @@ class Pencere(Adw.ApplicationWindow):
                                    active=ayar.get("tepsi", True))
         self.tepsi.connect("notify::active", self.tepsi_degisti)
         ayar_grubu.add(self.tepsi)
+        self.guncel_anahtar = Adw.SwitchRow(title=_("Check for updates automatically"),
+                                            subtitle=_("Once a day, from the project's GitHub releases"),
+                                            active=ayar.get("guncelleme_kontrol", True))
+        self.guncel_anahtar.connect("notify::active", lambda *_a: self._ayari_kaydet(
+            "guncelleme_kontrol", self.guncel_anahtar.get_active(), sinyal_servise=False))
+        ayar_grubu.add(self.guncel_anahtar)
         self.otomatik = Adw.SwitchRow(title=_("Start on login"),
                                       subtitle=_("Sync and the disk start automatically when you log in"))
         self.otomatik.set_active(ortak.systemctl("is-enabled", "--quiet", ortak.SERVIS).returncode == 0)
@@ -147,6 +160,8 @@ class Pencere(Adw.ApplicationWindow):
         self._ayar_zamanlayici = 0
         self.yenile()
         self.alani_hesapla()
+        if ayar.get("guncelleme_kontrol", True):
+            GLib.timeout_add_seconds(3, lambda: (self.guncelleme_denetle(), False)[1])
         GLib.timeout_add_seconds(2, self.yenile)
         GLib.timeout_add_seconds(300, lambda: (self.alani_hesapla(), True)[1])
 
@@ -391,6 +406,83 @@ class Pencere(Adw.ApplicationWindow):
             arka_planda(lambda: ortak.systemctl("disable", ortak.SERVIS, ortak.DISK_SERVISI),
                         lambda _r: self.yenile())
 
+    # ---------- updates ----------
+    def guncelleme_denetle(self, elle: bool = False):
+        def bitti(bilgi):
+            if isinstance(bilgi, Exception):
+                if elle:
+                    self.bildir(_("Couldn't check for updates: {error}").format(error=str(bilgi)[:80]))
+                return
+            if bilgi:
+                self._yeni_surum = bilgi
+                self.serit.set_title(_("Drivux {version} is available").format(version=bilgi["surum"]))
+                self.serit.set_revealed(True)
+                if elle:
+                    self.guncelleme_sor(bilgi)
+            elif elle:
+                self.bildir(_("Drivux is up to date ({version})").format(version=ortak.SURUM))
+        arka_planda(lambda: guncelle.kontrol_et(zorla=elle), bitti)
+
+    def guncelleme_sor(self, bilgi: dict | None):
+        if not bilgi:
+            return
+        notlar = Gtk.Label(label=bilgi["notlar"].strip()[:3000] or _("No release notes."), wrap=True,
+                           xalign=0, selectable=True, css_classes=["caption"])
+        kaydir = Gtk.ScrolledWindow(child=notlar, min_content_height=160, max_content_height=260,
+                                    propagate_natural_height=True)
+        dlg = Adw.AlertDialog(
+            heading=_("Drivux {version} is available").format(version=bilgi["surum"]),
+            body=_("You have {current}. Your settings and files are kept. "
+                   "The Google Drive disk is remounted for a moment during the update.").format(current=ortak.SURUM))
+        dlg.set_extra_child(kaydir)
+        dlg.add_response("sonra", _("Later"))
+        dlg.add_response("sayfa", _("Release page"))
+        dlg.add_response("kur", _("Update now"))
+        dlg.set_response_appearance("kur", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("kur")
+
+        def yanit(_d, r):
+            if r == "kur":
+                self.guncelleme_kur(bilgi)
+            elif r == "sayfa":
+                Gio.AppInfo.launch_default_for_uri(bilgi["sayfa"], None)
+        dlg.connect("response", yanit)
+        dlg.present(self)
+
+    def guncelleme_kur(self, bilgi: dict):
+        cubuk = Gtk.ProgressBar(show_text=True, text=_("Starting…"))
+        dlg = Adw.AlertDialog(heading=_("Updating Drivux"), body=_("This takes a minute or two."))
+        dlg.set_extra_child(cubuk)
+        dlg.set_can_close(False)
+        dlg.present(self)
+        nabiz = GLib.timeout_add(300, lambda: (cubuk.pulse() if cubuk.get_fraction() in (0, 1) else None, True)[1])
+
+        def ilerleme(oran):
+            GLib.idle_add(cubuk.set_fraction, oran)
+
+        def durum(metin):
+            GLib.idle_add(cubuk.set_text, metin)
+
+        def bitti(sonuc):
+            GLib.source_remove(nabiz)
+            dlg.set_can_close(True)
+            if isinstance(sonuc, Exception):
+                dlg.set_heading(_("Update failed"))
+                dlg.set_body(str(sonuc))
+                cubuk.set_visible(False)
+                dlg.add_response("tamam", _("Close"))
+                return
+            cubuk.set_fraction(1)
+            cubuk.set_text(_("Done"))
+            self.serit.set_revealed(False)
+            dlg.set_heading(_("Drivux {version} is installed").format(version=bilgi["surum"]))
+            dlg.set_body(_("Restart Drivux to start using the new version."))
+            dlg.add_response("sonra", _("Later"))
+            dlg.add_response("yeniden", _("Restart Drivux"))
+            dlg.set_response_appearance("yeniden", Adw.ResponseAppearance.SUGGESTED)
+            dlg.connect("response", lambda _d, r: r == "yeniden" and self.get_application().yeniden_baslat())
+        arka_planda(lambda: guncelle.kur(bilgi, ilerleme, durum), bitti)
+
     def kayitlari_goster(self):
         r = subprocess.run(["journalctl", "--user", "-u", ortak.SERVIS, "-u", ortak.DISK_SERVISI,
                             "-n", "300", "--no-pager", "-o", "short"], capture_output=True, text=True)
@@ -438,6 +530,12 @@ class Uygulama(Adw.Application):
             self.sihirbazi_ac()
         else:
             Pencere(self).present()
+
+    def yeniden_baslat(self):
+        """Quits and starts again once this instance has let go of its D-Bus name."""
+        subprocess.Popen(["sh", "-c", 'sleep 1; exec "$0" -m drivux', sys.executable], start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.quit()
 
     def sihirbazi_ac(self):
         from .sihirbaz import Sihirbaz

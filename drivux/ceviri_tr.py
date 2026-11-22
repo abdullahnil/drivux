@@ -259,4 +259,42 @@ TR = {
     "Open Drivux to fix it": "Düzeltmek için Drivux'u aç",
     "{n} folder has an error": "{n} klasörde hata var",
     "{n} folders have errors": "{n} klasörde hata var",
+
+    # ----- updates -----
+    "Check for updates": "Güncellemeleri denetle",
+    "Check for updates automatically": "Güncellemeleri kendiliğinden denetle",
+    "Once a day, from the project's GitHub releases": "Günde bir kez, projenin GitHub sürümlerinden",
+    "Couldn't check for updates: {error}": "Güncellemeler denetlenemedi: {error}",
+    "Drivux is up to date ({version})": "Drivux güncel ({version})",
+    "Drivux {version} is available": "Drivux {version} çıktı",
+    "Update": "Güncelle",
+    "Update now": "Şimdi güncelle",
+    "Later": "Sonra",
+    "Release page": "Sürüm sayfası",
+    "No release notes.": "Sürüm notu yok.",
+    "You have {current}. Your settings and files are kept. "
+    "The Google Drive disk is remounted for a moment during the update.":
+        "Sendeki sürüm {current}. Ayarların ve dosyaların korunur. "
+        "Güncelleme sırasında Google Drive diski bir anlığına yeniden bağlanır.",
+    "Updating Drivux": "Drivux güncelleniyor",
+    "This takes a minute or two.": "Bu bir iki dakika sürer.",
+    "Starting…": "Başlıyor…",
+    "Downloading {file}…": "{file} indiriliyor…",
+    "Downloading Drivux {version}…": "Drivux {version} indiriliyor…",
+    "Installing… (you'll be asked for your password)": "Kuruluyor… (şifren sorulacak)",
+    "Restarting the services…": "Servisler yeniden başlatılıyor…",
+    "Done": "Tamamlandı",
+    "Update failed": "Güncelleme başarısız",
+    "Close": "Kapat",
+    "Drivux {version} is installed": "Drivux {version} kuruldu",
+    "Restart Drivux to start using the new version.": "Yeni sürümü kullanmaya başlamak için Drivux'u yeniden başlat.",
+    "Restart Drivux": "Drivux'u yeniden başlat",
+    "Update available: Drivux {version}": "Güncelleme var: Drivux {version}",
+    "The download is incomplete. Please try again.": "İndirme yarım kaldı. Tekrar dene.",
+    "This release has no .{kind} package.": "Bu sürümde .{kind} paketi yok.",
+    "Installation was cancelled.": "Kurulum iptal edildi.",
+    "The package manager reported an error.": "Paket yöneticisi bir hata bildirdi.",
+    "kur.sh reported an error.": "kur.sh bir hata bildirdi.",
+    "Couldn't tell how Drivux was installed; download the new version from the releases page.":
+        "Drivux'un nasıl kurulduğu anlaşılamadı; yeni sürümü sürümler sayfasından indir.",
 }

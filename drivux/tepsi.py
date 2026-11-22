@@ -28,7 +28,7 @@ except (ValueError, ImportError):
     except (ValueError, ImportError):
         AppIndicator = None
 
-from . import ortak  # noqa: E402
+from . import guncelle, ortak  # noqa: E402
 from .bicim import gecen_sure  # noqa: E402
 from .ceviri import _, _n  # noqa: E402
 
@@ -60,6 +60,9 @@ class Tepsi:
         self.alt_durum = Gtk.MenuItem(label="", sensitive=False)
         menu.append(self.durum)
         menu.append(self.alt_durum)
+        self.guncelleme = Gtk.MenuItem(label="")
+        self.guncelleme.connect("activate", lambda *_a: _drivux())
+        menu.append(self.guncelleme)
         menu.append(Gtk.SeparatorMenuItem())
         ac = Gtk.MenuItem(label=_("Open Drivux"))
         ac.connect("activate", lambda *_a: _drivux())
@@ -76,6 +79,7 @@ class Tepsi:
         gizle.connect("activate", lambda *_a: self.gizle())
         menu.append(gizle)
         menu.show_all()
+        self.guncelleme.set_visible(False)
         self.gosterge.set_menu(menu)
         self.gosterge.set_secondary_activate_target(ac)   # middle click opens Drivux
 
@@ -83,6 +87,13 @@ class Tepsi:
         GLib.timeout_add_seconds(3, self.yenile)
 
     def yenile(self):
+        # After an update the files on disk are newer than this process: start again with them
+        if guncelle.kurulu_surum() != ortak.SURUM:
+            os.execv(sys.executable, [sys.executable, "-m", "drivux", "tray"])
+        yeni = guncelle.bekleyen_surum()
+        self.guncelleme.set_visible(bool(yeni))
+        if yeni:
+            self.guncelleme.set_label(_("Update available: Drivux {version}").format(version=yeni))
         ayar = ortak.ayar_oku()
         if not ayar.get("tepsi", True):
             Gtk.main_quit()

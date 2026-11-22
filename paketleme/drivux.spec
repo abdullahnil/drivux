@@ -38,6 +38,9 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Mon Nov 23 2026 abdullahnil - 1.5.0-1
+- Built-in updates: checks GitHub once a day, installs the new .rpm/.deb or source release
+
 * Mon Nov 23 2026 abdullahnil - 1.4.0-1
 - Top bar (tray) icon with status and quick actions
 - Faster browsing: the first folder levels are read in advance after mounting
