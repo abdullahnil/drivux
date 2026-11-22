@@ -1,5 +1,7 @@
 # Builds the website (site/build.py) and publishes it to GitHub Pages.
-# Runs when the site, the logo or the app version changes, and on every release.
+# Runs when the site, the logo or the app version changes. Every release bumps
+# SURUM in drivux/ortak.py on main, so releases are covered too. (Pages only
+# accepts deployments from main, not from release tags.)
 name: Website
 
 on:
@@ -11,8 +13,6 @@ on:
       - "docs/logo.png"
       - "drivux/ortak.py"
       - ".github/workflows/site.yml"
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:

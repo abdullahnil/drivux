@@ -9,7 +9,7 @@ A single static page (`index.html`) in English and Turkish, with a light and dar
 
 ## GitHub Pages
 
-`.github/workflows/site.yml` builds and publishes the site. It runs when the site, the logo or the version changes, and on every new release. In the repository settings, **Pages → Source** must be **GitHub Actions**.
+`.github/workflows/site.yml` builds and publishes the site. It runs when the site, the logo or the version changes. Every release changes the version on `main`, so releases are covered too. In the repository settings, **Pages → Source** must be **GitHub Actions**.
 
 ## Cloudflare Pages
 
