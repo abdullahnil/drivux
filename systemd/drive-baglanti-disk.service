@@ -1,0 +1,14 @@
+[Unit]
+Description=Drive Bağlantı — Google Drive diski (rclone mount)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+ExecStart=%h/.local/bin/drive-baglanti disk
+ExecStopPost=%h/.local/bin/drive-baglanti ayir
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=default.target

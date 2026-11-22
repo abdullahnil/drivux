@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Drive Bağlantı
+GenericName=Google Drive Eşitleme
+Comment=Google Drive'ı disk olarak bağla ve klasörleri eşitle
+Exec=drive-baglanti
+Icon=folder-remote
+Terminal=false
+Categories=Utility;FileTools;Network;
+Keywords=google;drive;rclone;sync;eşitleme;bulut;
+StartupNotify=true
+StartupWMClass=io.github.abdullahnil.DriveBaglanti

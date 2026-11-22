@@ -1,0 +1,12 @@
+[Unit]
+Description=Drive Bağlantı — klasör eşitleme servisi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=%h/.local/bin/drive-baglanti servis
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target
