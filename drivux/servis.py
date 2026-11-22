@@ -265,6 +265,45 @@ def _eski_baglantiyi_temizle(nokta) -> None:
         subprocess.run(["fusermount3", "-uz", str(nokta)], capture_output=True)
 
 
+def disk_isit(derinlik: int = 3, paralel: int = 8, en_fazla: int = 5000) -> None:
+    """Warms rclone's directory cache right after mounting.
+
+    The file manager lists every subfolder of the folder you open (for item counts),
+    and on a cold cache each listing is a Drive API call. Reading the first few
+    levels in parallel up front makes browsing instant afterwards. rclone keeps the
+    cache fresh by polling Drive for changes.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    nokta = ortak.yol(ortak.ayar_oku()["baglama_noktasi"])
+    for _i in range(120):                       # wait up to a minute for the mount
+        if ortak.disk_bagli():
+            break
+        time.sleep(0.5)
+    else:
+        return
+
+    def alt_klasorler(yol):
+        try:
+            with os.scandir(yol) as it:
+                return [e.path for e in it if e.is_dir(follow_symlinks=False)]
+        except OSError:
+            return []
+
+    baslangic = time.monotonic()
+    seviye, toplam = [str(nokta)], 0
+    with ThreadPoolExecutor(paralel) as havuz:
+        for _d in range(derinlik):
+            sonraki = []
+            for altlar in havuz.map(alt_klasorler, seviye):
+                sonraki.extend(altlar)
+            toplam += len(seviye)
+            seviye = sonraki[:en_fazla]
+            if not seviye:
+                break
+    log(f"Directory cache warmed: {toplam} folders in {time.monotonic() - baslangic:.1f} s")
+
+
 def disk_ayir() -> None:
     _eski_baglantiyi_temizle(ortak.yol(ortak.ayar_oku()["baglama_noktasi"]))
 

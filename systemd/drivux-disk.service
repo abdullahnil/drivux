@@ -6,6 +6,8 @@ Wants=network-online.target
 [Service]
 Type=notify
 ExecStart=@BINDIR@/drivux mount
+# Warm the directory cache in the background so browsing is fast from the start
+ExecStartPost=-/bin/sh -c '"@BINDIR@/drivux" warm &'
 ExecStopPost=@BINDIR@/drivux unmount
 Restart=on-failure
 RestartSec=15

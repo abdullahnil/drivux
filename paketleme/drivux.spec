@@ -40,6 +40,7 @@ cp -a %{kaynak}/. %{buildroot}/
 %changelog
 * Mon Nov 23 2026 abdullahnil - 1.4.0-1
 - Top bar (tray) icon with status and quick actions
+- Faster browsing: the first folder levels are read in advance after mounting
 
 * Mon Nov 23 2026 abdullahnil - 1.3.0-1
 - New name: Drivux. English interface (Turkish follows the system language)

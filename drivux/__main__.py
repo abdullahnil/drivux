@@ -19,6 +19,9 @@ def main() -> int:
     elif komut in ("mount", "disk"):
         from .servis import disk_bagla
         disk_bagla()
+    elif komut in ("warm", "isit"):
+        from .servis import disk_isit
+        disk_isit()
     elif komut in ("unmount", "ayir"):
         from .servis import disk_ayir
         disk_ayir()
