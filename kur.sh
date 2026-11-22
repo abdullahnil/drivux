@@ -15,6 +15,8 @@ PYDIR="$HOME/.local/share/drivux"
 BIN="$HOME/.local/bin"
 UYG="$HOME/.local/share/applications"
 SIMGE="$HOME/.local/share/icons/hicolor/scalable/apps"
+SEMBOL="$HOME/.local/share/icons/hicolor/symbolic/apps"
+OTOBASLAT="$HOME/.config/autostart"
 SYSTEMD="$HOME/.config/systemd/user"
 KIMLIK="io.github.abdullahnil.Drivux"
 
@@ -58,10 +60,29 @@ if $eksik_var; then
 else
     bilgi "$(t "All installed." "Hepsi kurulu.")"
 fi
+# Top bar icon (optional): AppIndicator library for GTK 3
+if ! python3 -c 'import gi
+for n in ("AyatanaAppIndicator3", "AppIndicator3"):
+    try:
+        gi.require_version(n, "0.1"); break
+    except ValueError: pass
+else: raise SystemExit(1)' 2>/dev/null; then
+    bilgi "$(t "Installing the library for the top bar icon" "Üst çubuk simgesi için kütüphane kuruluyor")"
+    if   command -v dnf     >/dev/null; then sudo dnf install -y libappindicator-gtk3 || true
+    elif command -v apt-get >/dev/null; then sudo apt-get install -y gir1.2-ayatanaappindicator3-0.1 || true
+    elif command -v pacman  >/dev/null; then sudo pacman -S --needed --noconfirm libayatana-appindicator || true
+    elif command -v zypper  >/dev/null; then sudo zypper install -y typelib-1_0-AyatanaAppIndicator3-0_1 || true
+    fi
+fi
+if [ "${XDG_CURRENT_DESKTOP:-}" != "${XDG_CURRENT_DESKTOP/GNOME/}" ] && \
+   ! gnome-extensions list --enabled 2>/dev/null | grep -q appindicator; then
+    bilgi "$(t "Tip: on GNOME, the top bar icon needs the \"AppIndicator and KStatusNotifierItem Support\" extension." \
+               "İpucu: GNOME'da üst çubuk simgesi için \"AppIndicator and KStatusNotifierItem Support\" eklentisi gerekir.")"
+fi
 
 # ---------- 2. app ----------
 adim "$(t "2/3 Installing Drivux (~/.local)" "2/3 Drivux kuruluyor (~/.local)")"
-mkdir -p "$PYDIR" "$BIN" "$UYG" "$SIMGE" "$SYSTEMD"
+mkdir -p "$PYDIR" "$BIN" "$UYG" "$SIMGE" "$SEMBOL" "$OTOBASLAT" "$SYSTEMD"
 rm -rf "$PYDIR/drivux"
 cp -r drivux "$PYDIR/"
 find "$PYDIR" -name __pycache__ -prune -exec rm -rf {} +
@@ -69,6 +90,8 @@ sed "s|@PYDIR@|$PYDIR|" veri/drivux.sh > "$BIN/drivux"
 chmod 755 "$BIN/drivux"
 sed "s|^Exec=drivux|Exec=$BIN/drivux|" veri/drivux.desktop > "$UYG/$KIMLIK.desktop"
 install -m 644 "veri/$KIMLIK.svg" "$SIMGE/"
+install -m 644 "veri/$KIMLIK-symbolic.svg" "$SEMBOL/"
+sed "s|^Exec=drivux|Exec=$BIN/drivux|" veri/drivux-tray.desktop > "$OTOBASLAT/$KIMLIK.tray.desktop"
 for s in systemd/*.service; do
     sed "s|@BINDIR@|$BIN|g" "$s" > "$SYSTEMD/$(basename "$s")"
 done

@@ -13,6 +13,8 @@ Requires:       libadwaita >= 1.5
 Requires:       fuse3
 Requires:       libnotify
 Recommends:     rclone
+Recommends:     libappindicator-gtk3
+Recommends:     (gnome-shell-extension-appindicator if gnome-shell)
 
 %description
 Drivux is a GNOME-style Google Drive client built on rclone. It mounts
@@ -30,10 +32,15 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/share/drivux/
 /usr/share/applications/io.github.abdullahnil.Drivux.desktop
 /usr/share/icons/hicolor/scalable/apps/io.github.abdullahnil.Drivux.svg
+/usr/share/icons/hicolor/symbolic/apps/io.github.abdullahnil.Drivux-symbolic.svg
+%config(noreplace) /etc/xdg/autostart/io.github.abdullahnil.Drivux.tray.desktop
 /usr/lib/systemd/user/drivux.service
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Mon Nov 23 2026 abdullahnil - 1.4.0-1
+- Top bar (tray) icon with status and quick actions
+
 * Mon Nov 23 2026 abdullahnil - 1.3.0-1
 - New name: Drivux. English interface (Turkish follows the system language)
 - Storage view shows Drive, Gmail and Google Photos usage separately

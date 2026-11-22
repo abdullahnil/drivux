@@ -2,6 +2,7 @@
   drivux               Open the app
   drivux sync          Ask the service to sync now          (esitle)
   drivux status        Print the sync status as JSON        (durum)
+  drivux tray          Show the top bar icon                (tepsi)
   drivux service       Run the sync service (used by systemd)   (servis)
   drivux mount         Mount Google Drive (used by systemd)     (disk)
   drivux unmount       Unmount Google Drive                     (ayir)
@@ -30,6 +31,9 @@ def main() -> int:
         import json
         from . import ortak
         print(json.dumps(ortak.durum_oku(), ensure_ascii=False, indent=2))
+    elif komut in ("tray", "tepsi"):
+        from .tepsi import main as tepsi
+        return tepsi()
     elif komut in ("", "app", "arayuz"):
         from .arayuz import main as arayuz
         return arayuz()

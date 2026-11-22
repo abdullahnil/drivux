@@ -5,7 +5,7 @@ Priority: optional
 Architecture: all
 Maintainer: abdullahnil <https://github.com/abdullahnil>
 Depends: python3, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1 (>= 1.5), fuse3, libnotify-bin
-Recommends: rclone
+Recommends: rclone, gir1.2-ayatanaappindicator3-0.1, gir1.2-gtk-3.0, gnome-shell-extension-appindicator
 Homepage: https://github.com/abdullahnil/drivux
 Description: Google Drive client: mount Drive as a disk and sync folders
  Drivux is a GNOME-style Google Drive client built on rclone. It mounts

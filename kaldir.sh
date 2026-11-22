@@ -14,7 +14,10 @@ systemctl --user daemon-reload
 rm -rf "$HOME/.local/share/drivux/drivux"
 rm -f "$HOME/.local/bin/drivux" \
       "$HOME/.local/share/applications/io.github.abdullahnil.Drivux.desktop" \
-      "$HOME/.local/share/icons/hicolor/scalable/apps/io.github.abdullahnil.Drivux.svg"
+      "$HOME/.local/share/icons/hicolor/scalable/apps/io.github.abdullahnil.Drivux.svg" \
+      "$HOME/.local/share/icons/hicolor/symbolic/apps/io.github.abdullahnil.Drivux-symbolic.svg" \
+      "$HOME/.config/autostart/io.github.abdullahnil.Drivux.tray.desktop"
+pkill -f "drivux tray" 2>/dev/null || true
 sed -i '/ Google Drive$/d' "$HOME/.config/gtk-3.0/bookmarks" 2>/dev/null || true
 
 if sor "$(t "Also delete the rclone Drivux downloaded, the settings and the status files?" \

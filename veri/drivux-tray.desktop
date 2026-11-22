@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Drivux top bar icon
+Name[tr]=Drivux üst çubuk simgesi
+Exec=drivux tray
+Icon=io.github.abdullahnil.Drivux
+NoDisplay=true
+Terminal=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=5

@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -13,27 +14,8 @@ from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from . import ortak  # noqa: E402
 from .bilesenler import GDOCS_SECENEKLERI, arka_planda, klasor_ekle, servisleri_uygula  # noqa: E402
+from .bicim import boyut, gecen_sure  # noqa: E402
 from .ceviri import DIL_ADLARI, _, _n  # noqa: E402
-
-
-def gecen_sure(ts: float | None) -> str:
-    if not ts:
-        return _("not yet")
-    s = int(time.time() - ts)
-    if s < 60:
-        return _("just now")
-    if s < 3600:
-        return _("{n} min ago").format(n=s // 60)
-    if s < 86400:
-        return _n("{n} hour ago", "{n} hours ago", s // 3600).format(n=s // 3600)
-    return time.strftime("%Y-%m-%d %H:%M", time.localtime(ts))
-
-
-def boyut(b: float) -> str:
-    for birim in ("B", "KB", "MB", "GB", "TB"):
-        if b < 1024 or birim == "TB":
-            return f"{b:.1f} {birim}" if birim != "B" else f"{int(b)} B"
-        b /= 1024
 
 
 class Pencere(Adw.ApplicationWindow):
@@ -146,6 +128,11 @@ class Pencere(Adw.ApplicationWindow):
         self.dil.set_selected(next((i for i, (k, _a) in enumerate(DIL_ADLARI) if k == ayar.get("dil", "auto")), 0))
         self.dil.connect("notify::selected", self.dil_degisti)
         ayar_grubu.add(self.dil)
+        self.tepsi = Adw.SwitchRow(title=_("Show icon in the top bar"),
+                                   subtitle=_("Status and quick actions from the top bar"),
+                                   active=ayar.get("tepsi", True))
+        self.tepsi.connect("notify::active", self.tepsi_degisti)
+        ayar_grubu.add(self.tepsi)
         self.otomatik = Adw.SwitchRow(title=_("Start on login"),
                                       subtitle=_("Sync and the disk start automatically when you log in"))
         self.otomatik.set_active(ortak.systemctl("is-enabled", "--quiet", ortak.SERVIS).returncode == 0)
@@ -382,6 +369,11 @@ class Pencere(Adw.ApplicationWindow):
         self._ayari_kaydet("dil", DIL_ADLARI[self.dil.get_selected()][0], sinyal_servise=False)
         self.bildir(_("Language will change the next time Drivux opens"))
 
+    def tepsi_degisti(self, *_a):
+        self._ayari_kaydet("tepsi", self.tepsi.get_active(), sinyal_servise=False)
+        if self.tepsi.get_active():
+            tepsiyi_baslat()
+
     def _gecikmeli(self, fn):
         if self._ayar_zamanlayici:
             GLib.source_remove(self._ayar_zamanlayici)
@@ -424,6 +416,13 @@ class Pencere(Adw.ApplicationWindow):
         ).present(self)
 
 
+def tepsiyi_baslat():
+    """Starts the tray icon process; it exits by itself if one is already running."""
+    if ortak.ayar_oku().get("tepsi", True):
+        subprocess.Popen([sys.executable, "-m", "drivux", "tray"], start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 class Uygulama(Adw.Application):
     def __init__(self):
         super().__init__(application_id=ortak.UYGULAMA_KIMLIGI, flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
@@ -431,6 +430,8 @@ class Uygulama(Adw.Application):
     def do_activate(self):
         if ortak.eski_surumden_tasi() and ortak.ayar_oku()["kurulum_tamam"]:
             servisleri_uygula(ortak.ayar_oku())
+        if ortak.ayar_oku()["kurulum_tamam"]:
+            tepsiyi_baslat()
         if self.props.active_window:
             self.props.active_window.present()
         elif not ortak.ayar_oku()["kurulum_tamam"] or not ortak.rclone_yolu():
@@ -443,7 +444,10 @@ class Uygulama(Adw.Application):
         for p in self.get_windows():
             if isinstance(p, Pencere):
                 p.close()
-        Sihirbaz(self, lambda: Pencere(self).present()).present()
+        def bitti():
+            tepsiyi_baslat()
+            Pencere(self).present()
+        Sihirbaz(self, bitti).present()
 
 
 def main():

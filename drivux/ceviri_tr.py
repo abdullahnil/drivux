@@ -250,4 +250,13 @@ TR = {
     "The first sync of your folders has started; large folders can take a while.":
         "Klasörlerinin ilk eşitlemesi başladı; büyük klasörlerde biraz sürebilir.",
     "Everything starts automatically when you log in.": "Her şey oturum açınca kendiliğinden başlar.",
+
+    # ----- top bar icon -----
+    "Show icon in the top bar": "Üst çubukta simge göster",
+    "Status and quick actions from the top bar": "Üst çubuktan durumu gör ve hızlı işlem yap",
+    "Open Google Drive": "Google Drive'ı aç",
+    "Hide this icon": "Bu simgeyi gizle",
+    "Open Drivux to fix it": "Düzeltmek için Drivux'u aç",
+    "{n} folder has an error": "{n} klasörde hata var",
+    "{n} folders have errors": "{n} klasörde hata var",
 }

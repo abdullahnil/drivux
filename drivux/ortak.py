@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-SURUM = "1.3.0"
+SURUM = "1.4.0"
 EN_DUSUK_RCLONE = (1, 66, 0)   # bisync --resilient/--recover/--conflict-resolve için
 UYGULAMA_KIMLIGI = "io.github.abdullahnil.Drivux"
 SERVIS = "drivux.service"
@@ -34,6 +34,7 @@ VARSAYILAN_AYAR = {
     "disk": True,                         # Drive disk olarak bağlansın mı
     "gdocs": "baglanti",                  # Google Docs: "baglanti" (tarayıcıda açılır) | "gizle"
     "klasorler": [],                      # [{"yerel": "~/...", "uzak": "klasor", "hazir": bool}]
+    "tepsi": True,                        # üst çubukta (tepside) simge gösterilsin mi
     "kurulum_tamam": False,               # ilk açılış sihirbazı tamamlandı mı
 }
 
