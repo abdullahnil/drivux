@@ -50,10 +50,10 @@ Download the package for your distribution from the [Releases](https://github.co
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.5.2-1.noarch.rpm
+sudo dnf install ./drivux-1.5.3-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.5.2_all.deb
+sudo apt install ./drivux_1.5.3_all.deb
 ```
 
 Then open **Drivux** from your app menu and the setup wizard starts.

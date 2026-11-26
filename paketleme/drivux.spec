@@ -38,6 +38,11 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Thu Nov 26 2026 abdullahnil - 1.5.3-1
+- Adding a folder creates it on Drive right away; the first sync no longer fails with "directory not found"
+- Sync errors show the real rclone error instead of "bisync aborted"
+- Only retry with --resync when the previous sync records are really missing
+
 * Mon Nov 23 2026 abdullahnil - 1.5.2-1
 - Always run the installed code: a "drivux" folder in the current directory no longer shadows it
 
