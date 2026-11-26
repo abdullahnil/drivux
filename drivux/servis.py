@@ -7,6 +7,7 @@
 """
 
 import os
+import re
 import signal
 import subprocess
 import threading
@@ -36,15 +37,32 @@ def bildir(baslik: str, govde: str) -> None:
     )
 
 
+_ONEK = re.compile(r"^\d{4}/\d\d/\d\d \d\d:\d\d:\d\d\s+[A-Z]+\s*:\s*")
+# rclone'un kendi özet satırları: asıl nedeni söylemezler
+_GENEL = ("failed to bisync", "bisync aborted", "bisync critical error",
+          "error is retryable", "must run --resync")
+
+
+def rclone_hata_satirlari(cikti: str) -> list[str]:
+    """rclone çıktısındaki hata satırları, zaman damgası ve düzey öneki atılmış."""
+    satirlar = []
+    for s in cikti.splitlines():
+        if "ERROR" in s or "Failed" in s or "error" in s:
+            satirlar.append(_ONEK.sub("", s).strip())
+    return [s for s in satirlar if s]
+
+
 def rclone_hata_ozeti(cikti: str) -> str:
-    satirlar = [s for s in cikti.splitlines() if "ERROR" in s or "Failed" in s or "error" in s]
-    if not satirlar:
-        satirlar = cikti.strip().splitlines()[-3:]
-    ozet = satirlar[-1] if satirlar else _("Unknown error")
-    # "2026/11/22 23:43:32 ERROR : " gibi öneki at
-    if " : " in ozet:
-        ozet = ozet.split(" : ", 1)[1]
-    return ozet.strip()[:300]
+    satirlar = rclone_hata_satirlari(cikti)
+    ozel = [s for s in satirlar if not any(g in s.lower() for g in _GENEL)]
+    if ozel:
+        ozet = ozel[-1]
+    elif satirlar:
+        ozet = satirlar[-1]
+    else:
+        son = [_ONEK.sub("", s).strip() for s in cikti.strip().splitlines()[-3:]]
+        ozet = son[-1] if son else _("Unknown error")
+    return ozet[:300] or _("Unknown error")
 
 
 class Servis:
@@ -194,6 +212,8 @@ class Servis:
                      .format(n=self.ayar["en_fazla_silme"]) if silme else rclone_hata_ozeti(cikti))
             kd.update(sonuc="hata", mesaj=mesaj, silme_siniri=silme)
             log(f"{yerel} <-> {uzak}: ERROR: {mesaj}")
+            for satir in rclone_hata_satirlari(cikti)[-20:]:
+                log(f"  rclone: {satir}")
             if not onceki_hata:
                 bildir(_("Sync error: {name}").format(name=yerel.name), mesaj)
         return False
