@@ -65,6 +65,12 @@ def rclone_hata_ozeti(cikti: str) -> str:
     return ozet[:300] or _("Unknown error")
 
 
+def _kayitlar_yok(cikti: str) -> bool:
+    """bisync önceki kayıtlarını bulamadı mı? ("without --resync" bunu söylemez.)"""
+    cikti = cikti.lower()
+    return "cannot find prior" in cikti or "must run --resync" in cikti
+
+
 class Servis:
     def __init__(self):
         self.ayar = ortak.ayar_oku()
@@ -191,7 +197,7 @@ class Servis:
 
         ilk = not k.get("hazir")
         sonuc = self._bisync(yerel, uzak, resync=ilk, zorla=zorla)
-        if sonuc.returncode != 0 and not ilk and "--resync" in sonuc.stdout + sonuc.stderr:
+        if sonuc.returncode != 0 and not ilk and _kayitlar_yok(sonuc.stdout + sonuc.stderr):
             # Önceki kayıtlar kaybolmuş: güvenli birleştirme (resync hiçbir şey silmez)
             log(f"{yerel}: previous listings not found, merging (resync)")
             sonuc = self._bisync(yerel, uzak, resync=True, zorla=zorla)
