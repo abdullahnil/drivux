@@ -233,6 +233,8 @@ class Servis:
             "--drive-skip-gdocs", "--log-level", "NOTICE",
         )
         if resync:
+            # resync, Drive'daki klasör yoksa "directory not found" ile durur
+            subprocess.run(ortak.rclone("mkdir", uzak), capture_output=True, text=True)
             komut.append("--resync")
         if zorla:
             komut.append("--force")
