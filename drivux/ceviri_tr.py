@@ -118,6 +118,8 @@ TR = {
     # ----- adding folders -----
     "That didn't work": "Olmadı",
     "This folder is already in the list.": "Bu klasör zaten listede.",
+    "The folder couldn't be created on Drive. Check your internet connection and try again.":
+        "Klasör Drive'da oluşturulamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.",
     "This folder can't be synced. Don't pick your home folder itself or a folder inside the Drive disk; "
     "pick a folder inside your home folder instead.":
         "Bu klasör eşitlenemez. Ev klasörünün kendisini ya da Drive diskinin içini seçme; "

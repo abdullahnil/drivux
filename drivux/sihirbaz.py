@@ -266,7 +266,8 @@ class Sihirbaz(Adw.ApplicationWindow):
         ekle = Gtk.Button(icon_name="list-add-symbolic", tooltip_text=_("Add folder"),
                           valign=Gtk.Align.CENTER, css_classes=["flat"])
         ekle.connect("clicked", lambda *_a: klasor_ekle(self, self.ayar["klasorler"],
-                                                        self.nokta_girisi.get_text(), self._klasor_eklendi))
+                                                        self.nokta_girisi.get_text(), self._klasor_eklendi,
+                                                        uzak_ad=self.ayar["uzak"]))
         self.klasor_grubu.set_header_suffix(ekle)
         self.klasor_satirlari = []
         sayfa.add(self.klasor_grubu)

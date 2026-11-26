@@ -1,5 +1,6 @@
 """Small pieces shared by the main window and the setup wizard."""
 
+import subprocess
 import threading
 from pathlib import Path
 
@@ -31,8 +32,10 @@ def arka_planda(is_, bitince=None):
     threading.Thread(target=calis, daemon=True).start()
 
 
-def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, eklendi):
-    """Lets the user pick a folder and its name on Drive, then calls eklendi({"yerel","uzak","hazir"})."""
+def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, eklendi,
+                uzak_ad: str | None = None):
+    """Lets the user pick a folder and its name on Drive, creates that folder on Drive if needed,
+    then calls eklendi({"yerel","uzak","hazir"})."""
     def secildi(dialog, sonuc):
         try:
             dosya = dialog.select_folder_finish(sonuc)
@@ -62,8 +65,22 @@ def klasor_ekle(pencere: Gtk.Window, mevcut: list[dict], baglama_noktasi: str, e
 
         def yanit(_d, r):
             ad = giris.get_text().strip().strip("/")
-            if r == "ekle" and ad:
+            if r != "ekle" or not ad:
+                return
+            hedef = f"{uzak_ad or ortak.ayar_oku()['uzak']}:{ad}"
+
+            def olustur():
+                # Drive'da klasör yoksa oluşturur, varsa bir şey yapmaz
+                return subprocess.run(ortak.rclone("mkdir", hedef), capture_output=True, text=True)
+
+            def bitti(sonuc):
+                if isinstance(sonuc, Exception) or sonuc.returncode != 0:
+                    hata = str(sonuc) if isinstance(sonuc, Exception) else (sonuc.stderr.strip().splitlines() or [""])[-1]
+                    _uyari(pencere, _("The folder couldn't be created on Drive. Check your internet "
+                                      "connection and try again.") + (f"\n\n{hata}" if hata else ""))
+                    return
                 eklendi({"yerel": ortak.kisalt(yerel), "uzak": ad, "hazir": False})
+            arka_planda(olustur, bitti)
         dlg.connect("response", yanit)
         dlg.present(pencere)
 
