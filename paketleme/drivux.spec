@@ -38,6 +38,9 @@ cp -a %{kaynak}/. %{buildroot}/
 /usr/lib/systemd/user/drivux-disk.service
 
 %changelog
+* Thu Nov 26 2026 abdullahnil - 1.5.4-1
+- Status icons show again on Adwaita 50+: Drivux ships its own fallback for icons the theme no longer has
+
 * Thu Nov 26 2026 abdullahnil - 1.5.3-1
 - Adding a folder creates it on Drive right away; the first sync no longer fails with "directory not found"
 - Sync errors show the real rclone error instead of "bisync aborted"

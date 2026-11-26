@@ -50,10 +50,10 @@ Dağıtımına uygun paketi [Sürümler](https://github.com/abdullahnil/drivux/r
 
 ```bash
 # Fedora / RHEL / openSUSE
-sudo dnf install ./drivux-1.5.3-1.noarch.rpm
+sudo dnf install ./drivux-1.5.4-1.noarch.rpm
 
 # Ubuntu 24.04+ / Debian 13+ / Linux Mint 22+
-sudo apt install ./drivux_1.5.3_all.deb
+sudo apt install ./drivux_1.5.4_all.deb
 ```
 
 Ardından uygulama menüsünden **Drivux**'u aç; kurulum sihirbazı başlar.
