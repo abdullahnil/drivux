@@ -10,7 +10,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from . import guncelle, ortak  # noqa: E402
 from .bilesenler import GDOCS_SECENEKLERI, arka_planda, klasor_ekle, servisleri_uygula  # noqa: E402
@@ -523,6 +523,13 @@ class Uygulama(Adw.Application):
         eylem = Gio.SimpleAction.new("guncelle", None)
         eylem.connect("activate", lambda *_a: self.guncellemeyi_goster())
         self.add_action(eylem)
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        # Fallback icons: some themes (Adwaita 50+) no longer ship emblem-ok/emblem-synchronizing.
+        # Loose icons in a search path are only used when the theme has no icon with that name.
+        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(
+            str(Path(__file__).parent / "simgeler"))
 
     def guncellemeyi_goster(self):
         self.activate()
